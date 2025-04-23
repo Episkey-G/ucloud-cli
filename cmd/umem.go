@@ -209,8 +209,8 @@ func NewCmdRedisCreate(out io.Writer) *cobra.Command {
 	flags.StringVar(&redisType, "type", "", "Required. Type of the redis. Accept values:'master-replica','distributed'")
 	req.Size = flags.Int("size-gb", 1, "Optional. Memory size. Default value 1GB(for master-replica redis type) or 16GB(for distributed redis type). Unit GB")
 	req.Version = flags.String("version", "3.2", "Optional. Version of redis")
-	req.VPCId = flags.String("vpc-id", "", "Optional. VPC ID. This field is required under VPC2.0. See 'ucloud vpc list'")
-	req.SubnetId = flags.String("subnet-id", "", "Optional. Subnet ID. This field is required under VPC2.0. See 'ucloud subnet list'")
+	req.VPCId = flags.String("vpc-id", "", fmt.Sprintf("Optional. VPC ID. This field is required under VPC2.0. See '%s vpc list'", base.BrandNameLower))
+	req.SubnetId = flags.String("subnet-id", "", fmt.Sprintf("Optional. Subnet ID. This field is required under VPC2.0. See '%s subnet list'", base.BrandNameLower))
 	flags.StringVar(&password, "password", "", "Optional. Password of redis to create")
 
 	bindRegion(req, flags)
@@ -243,7 +243,7 @@ func NewCmdRedisDelete(out io.Writer) *cobra.Command {
 		Use:     "delete",
 		Short:   "Delete redis instances",
 		Long:    "Delete redis instances",
-		Example: "ucloud redis delete --umem-id uredis-rl5xuxx/testcli1,uredis-xsdfa/testcli2",
+		Example: fmt.Sprintf("%s redis delete --umem-id uredis-rl5xuxx/testcli1,uredis-xsdfa/testcli2", base.BrandNameLower),
 		Run: func(c *cobra.Command, args []string) {
 			for _, idname := range idNames {
 				id := base.PickResourceID(idname)
@@ -455,8 +455,8 @@ func NewCmdMemcacheCreate(out io.Writer) *cobra.Command {
 
 	req.Name = flags.String("name", "", "Required. Name of memcache instance to create")
 	req.Size = flags.Int("size-gb", 1, "Optional. Memory size of memcache instance. Unit GB. Accpet values:1,2,4,8,16,32")
-	req.VPCId = flags.String("vpc-id", "", "Optional. VPC ID. See 'ucloud vpc list'")
-	req.SubnetId = flags.String("subnet-id", "", "Optional. Subnet ID. See 'ucloud subnet list'")
+	req.VPCId = flags.String("vpc-id", "", fmt.Sprintf("Optional. VPC ID. See '%s vpc list'", base.BrandNameLower))
+	req.SubnetId = flags.String("subnet-id", "", fmt.Sprintf("Optional. Subnet ID. See '%s subnet list'", base.BrandNameLower))
 	bindProjectID(req, flags)
 	bindRegion(req, flags)
 	bindZone(req, flags)
@@ -485,7 +485,7 @@ func NewCmdMemcacheDelete(out io.Writer) *cobra.Command {
 		Use:     "delete",
 		Short:   "Delete memcache instances",
 		Long:    "Delete memcache instances",
-		Example: "ucloud memcache delete --umem-id umemcache-rl5xuxx/testcli1,umemcache-xsdfa/testcli2",
+		Example: fmt.Sprintf("%s memcache delete --umem-id umemcache-rl5xuxx/testcli1,umemcache-xsdfa/testcli2", base.BrandNameLower),
 		Run: func(c *cobra.Command, args []string) {
 			for _, idname := range idNames {
 				id := base.PickResourceID(idname)

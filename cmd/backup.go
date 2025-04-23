@@ -197,7 +197,7 @@ func NewCmdUDBBackupDelete(out io.Writer) *cobra.Command {
 		Use:     "delete",
 		Short:   "Delete backups of MySQL instance",
 		Long:    "Delete backups of MySQL instance",
-		Example: "ucloud udb backup delete --backup-id 65534,65535",
+		Example: fmt.Sprintf("%s udb backup delete --backup-id 65534,65535", base.BrandNameLower),
 		Run: func(c *cobra.Command, args []string) {
 			for _, id := range ids {
 				req.BackupId = sdk.Int(id)
@@ -280,7 +280,7 @@ func NewCmdUDBLogArchiveCreate(out io.Writer) *cobra.Command {
 		Use:     "archive",
 		Short:   "Archive the log of mysql as a compressed file",
 		Long:    "Archive the log of mysql as a compressed file",
-		Example: "ucloud mysql logs archive --name test.cli2 --udb-id udb-xxx/test.cli1 --log-type slow_query --begin-time 2019-02-23/15:30:00 --end-time 2019-02-24/15:31:00",
+		Example: fmt.Sprintf("%s mysql logs archive --name test.cli2 --udb-id udb-xxx/test.cli1 --log-type slow_query --begin-time 2019-02-23/15:30:00 --end-time 2019-02-24/15:31:00", base.BrandNameLower),
 		Run: func(c *cobra.Command, args []string) {
 			udbID = base.PickResourceID(udbID)
 			if logType == "slow_query" {
@@ -463,7 +463,7 @@ func NewCmdUDBLogArchiveGetDownloadURL(out io.Writer) *cobra.Command {
 		Use:     "download",
 		Short:   "Display url of an archive(log file)",
 		Long:    "Display url of an archive(log file)",
-		Example: "ucloud mysql logs download --udb-id udb-urixxx/test.cli1 --archive-id 35044",
+		Example: fmt.Sprintf("%s mysql logs download --udb-id udb-urixxx/test.cli1 --archive-id 35044", base.BrandNameLower),
 		Run: func(c *cobra.Command, args []string) {
 			*req.DBId = base.PickResourceID(*req.DBId)
 			resp, err := base.BizClient.DescribeUDBBinlogBackupURL(req)
@@ -501,7 +501,7 @@ func NewCmdUDBLogArchiveDelete(out io.Writer) *cobra.Command {
 		Use:     "delete",
 		Short:   "Delete log archives(log files)",
 		Long:    "Delete log archives(log files)",
-		Example: "ucloud mysql logs delete --archive-id 35025",
+		Example: fmt.Sprintf("%s mysql logs delete --archive-id 35025", base.BrandNameLower),
 		Run: func(c *cobra.Command, args []string) {
 			for _, id := range ids {
 				req.BackupId = sdk.Int(id)

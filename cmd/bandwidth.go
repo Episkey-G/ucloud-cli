@@ -267,7 +267,7 @@ func NewCmdBandwidthPkgCreate() *cobra.Command {
 		Use:     "create",
 		Short:   "Create bandwidth package",
 		Long:    "Create bandwidth package",
-		Example: "ucloud bw pkg create --eip-id eip-xxx --bandwidth-mb 20 --start-time 2018-12-15/09:20:00 --end-time 2018-12-16/09:20:00",
+		Example: fmt.Sprintf("%s bw pkg create --eip-id eip-xxx --bandwidth-mb 20 --start-time 2018-12-15/09:20:00 --end-time 2018-12-16/09:20:00", base.BrandNameLower),
 		Run: func(c *cobra.Command, args []string) {
 			st, err := time.ParseInLocation(timeLayout, *start, loc)
 			if err != nil {
@@ -381,7 +381,7 @@ func NewCmdBandwidthPkgDelete() *cobra.Command {
 		Use:     "delete",
 		Short:   "Delete bandwidth packages",
 		Long:    "Delete bandwidth packages",
-		Example: "ucloud bw pkg delete --resource-id bwpack-xxx",
+		Example: fmt.Sprintf("%s bw pkg delete --resource-id bwpack-xxx", base.BrandNameLower),
 		Run: func(c *cobra.Command, args []string) {
 			for _, id := range ids {
 				id := base.PickResourceID(id)

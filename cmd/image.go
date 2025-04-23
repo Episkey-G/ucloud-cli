@@ -65,7 +65,7 @@ func NewCmdUImageList(out io.Writer) *cobra.Command {
 		Use:     "list",
 		Short:   "List image",
 		Long:    "List image",
-		Example: "ucloud image list --image-type Base",
+		Example: fmt.Sprintf("%s image list --image-type Base", base.BrandNameLower),
 		Run: func(cmd *cobra.Command, args []string) {
 			resp, err := base.BizClient.DescribeImage(req)
 			if err != nil {
@@ -175,8 +175,8 @@ func NewCmdImageCopy(out io.Writer) *cobra.Command {
 	req.ProjectId = cmd.Flags().String("project-id", base.ConfigIns.ProjectID, "Optional. Assign project-id")
 	req.Region = cmd.Flags().String("region", base.ConfigIns.Region, "Optional. Assign region")
 	req.Zone = cmd.Flags().String("zone", base.ConfigIns.Zone, "Optional. Assign availability zone")
-	req.TargetRegion = flags.String("target-region", base.ConfigIns.Region, "Optional. Target region. See 'ucloud region'")
-	req.TargetProjectId = flags.String("target-project", base.ConfigIns.ProjectID, "Optional. Target Project ID. See 'ucloud project list'")
+	req.TargetRegion = flags.String("target-region", base.ConfigIns.Region, fmt.Sprintf("Optional. Target region. See '%s region'", base.BrandNameLower))
+	req.TargetProjectId = flags.String("target-project", base.ConfigIns.ProjectID, fmt.Sprintf("Optional. Target Project ID. See '%s project list'", base.BrandNameLower))
 	req.TargetImageName = flags.String("target-image-name", "", "Optional. Name of target image")
 	req.TargetImageDescription = flags.String("target-image-desc", "", "Optional. Description of target image")
 	async = flags.Bool("async", false, "Optional. Do not wait for the long-running operation to finish.")

@@ -15,6 +15,7 @@
 package cmd
 
 import (
+	"fmt"
 	"io"
 
 	"github.com/spf13/cobra"
@@ -30,7 +31,7 @@ func NewCmdProject() *cobra.Command {
 		Use:     "project",
 		Short:   "List,create,update and delete project",
 		Long:    "List,create,update and delete project",
-		Example: "ucloud project",
+		Example: fmt.Sprintf("%s project", base.BrandNameLower),
 	}
 	out := base.Cxt.GetWriter()
 	cmd.AddCommand(NewCmdProjectList(out))
@@ -46,7 +47,7 @@ func NewCmdProjectList(out io.Writer) *cobra.Command {
 		Use:     "list",
 		Short:   "List project",
 		Long:    "List project",
-		Example: "ucloud project list",
+		Example: fmt.Sprintf("%s project list", base.BrandNameLower),
 		Run: func(cmd *cobra.Command, args []string) {
 			listProject(out)
 		},
@@ -61,7 +62,7 @@ func NewCmdProjectCreate() *cobra.Command {
 		Use:     "create",
 		Short:   "Create project",
 		Long:    "Create project",
-		Example: "ucloud project create --name xxx",
+		Example: fmt.Sprintf("%s project create --name xxx", base.BrandNameLower),
 		Run: func(cmd *cobra.Command, args []string) {
 			resp, err := base.BizClient.CreateProject(req)
 			if err != nil {
@@ -88,7 +89,7 @@ func NewCmdProjectUpdate() *cobra.Command {
 		Use:     "update",
 		Short:   "Update project name",
 		Long:    "Update project name",
-		Example: "ucloud project update --id org-xxx --name new_name",
+		Example: fmt.Sprintf("%s project update --id org-xxx --name new_name", base.BrandNameLower),
 		Run: func(cmd *cobra.Command, args []string) {
 			resp, err := base.BizClient.ModifyProject(req)
 			if err != nil {
@@ -116,7 +117,7 @@ func NewCmdProjectDelete() *cobra.Command {
 		Use:     "delete",
 		Short:   "Delete project",
 		Long:    "Delete project",
-		Example: "ucloud project delete --id org-xxx",
+		Example: fmt.Sprintf("%s project delete --id org-xxx", base.BrandNameLower),
 		Run: func(cmd *cobra.Command, args []string) {
 			resp, err := base.BizClient.TerminateProject(req)
 			if err != nil {

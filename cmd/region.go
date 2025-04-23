@@ -35,7 +35,7 @@ func NewCmdRegion(out io.Writer) *cobra.Command {
 		Use:     "region",
 		Short:   "List all region and zone",
 		Long:    "List all region and zone",
-		Example: "ucloud region",
+		Example: fmt.Sprintf("%s region", base.BrandNameLower),
 		Run: func(cmd *cobra.Command, args []string) {
 			regionIns, err := fetchRegion()
 			if err != nil {

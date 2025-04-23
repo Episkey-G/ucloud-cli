@@ -30,13 +30,13 @@ var global = &base.Global
 // NewCmdRoot 创建rootCmd rootCmd represents the base command when called without any subcommands
 func NewCmdRoot() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:               "ucloud",
-		Short:             "UCloud CLI v" + base.Version,
-		Long:              `UCloud CLI - manage UCloud resources and developer workflow`,
+		Use:               base.BrandNameLower,
+		Short:             fmt.Sprintf("%s CLI v%s", base.BrandName, base.Version),
+		Long:              fmt.Sprintf("%s CLI - manage %s resources and developer workflow", base.BrandName, base.BrandName),
 		DisableAutoGenTag: true,
 		Run: func(cmd *cobra.Command, args []string) {
 			if global.Version {
-				base.Cxt.Printf("ucloud cli %s\n", base.Version)
+				base.Cxt.Printf("%s cli %s\n", base.BrandNameLower, base.Version)
 			} else if global.Completion {
 				NewCmdCompletion().Run(cmd, args)
 			} else if global.Config {
@@ -55,7 +55,7 @@ func NewCmdRoot() *cobra.Command {
 	cmd.Flags().BoolVarP(&global.Version, "version", "v", false, "Display version")
 	cmd.Flags().BoolVar(&global.Completion, "completion", false, "Turn on auto completion according to the prompt")
 	cmd.Flags().BoolVar(&global.Config, "config", false, "Display configuration")
-	cmd.Flags().BoolVar(&global.Signup, "signup", false, "Launch UCloud sign up page in browser")
+	cmd.Flags().BoolVar(&global.Signup, "signup", false, fmt.Sprintf("Launch %s sign up page in browser", base.BrandName))
 
 	cmd.PersistentFlags().SetFlagValuesFunc("profile", func() []string { return base.AggConfigListIns.GetProfileNameList() })
 	cmd.SetHelpTemplate(helpTmpl)
@@ -241,11 +241,11 @@ func initialize(cmd *cobra.Command) {
 			return
 		}
 		if base.ConfigIns.PrivateKey == "" {
-			base.Cxt.Println("private-key is empty. Execute command 'ucloud init|config' to configure it or run 'ucloud config list' to check your configurations")
+			base.Cxt.Printf("private-key is empty. Execute command '%s init|config' to configure it or run '%s config list' to check your configurations\n", base.BrandNameLower, base.BrandNameLower)
 			os.Exit(0)
 		}
 		if base.ConfigIns.PublicKey == "" {
-			base.Cxt.Println("public-key is empty. Execute command 'ucloud init|config' to configure it or run 'ucloud config list' to check your configurations")
+			base.Cxt.Printf("public-key is empty. Execute command '%s init|config' to configure it or run '%s config list' to check your configurations\n", base.BrandNameLower, base.BrandNameLower)
 			os.Exit(0)
 		}
 	}

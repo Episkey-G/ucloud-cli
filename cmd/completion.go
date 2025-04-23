@@ -54,18 +54,18 @@ func NewCmdCompletion() *cobra.Command {
 func bashCompletion(cmd *cobra.Command) {
 	platform := runtime.GOOS
 	if platform == "darwin" {
-		fmt.Println(`Please append 'complete -C $(which ucloud) ucloud' to file '~/.bash_profile'`)
+		fmt.Printf(`Please append 'complete -C $(which %s) %s' to file '~/.bash_profile'`, base.BrandNameLower, base.BrandNameLower)
 
 	} else if platform == "linux" {
-		fmt.Println(`Please append 'complete -C $(which ucloud) ucloud' to file '~/.bashrc'`)
+		fmt.Printf(`Please append 'complete -C $(which %s) %s' to file '~/.bashrc'`, base.BrandNameLower, base.BrandNameLower)
 	}
 }
 
 func zshCompletion(cmd *cobra.Command) {
-	fmt.Println(`Please append the following scripts to file '~/.zshrc'.
+	fmt.Printf(`Please append the following scripts to file '~/.zshrc'.
 
 autoload -U +X bashcompinit && bashcompinit
-complete -F $(which ucloud) ucloud`)
+complete -F $(which %s) %s`, base.BrandNameLower, base.BrandNameLower)
 }
 
 func getBashVersion() (version string, err error) {

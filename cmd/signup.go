@@ -20,18 +20,25 @@ import (
 	"runtime"
 
 	"github.com/spf13/cobra"
+	"github.com/ucloud/ucloud-cli/base"
 )
 
 // NewCmdSignup ucloud signup
 func NewCmdSignup() *cobra.Command {
 	var cmd = &cobra.Command{
 		Use:     "signup",
-		Short:   "Launch UCloud sign up page in browser",
-		Long:    `Launch UCloud sign up page in browser`,
+		Short:   fmt.Sprintf("Launch %s sign up page in browser", base.BrandName),
+		Long:    fmt.Sprintf(`Launch %s sign up page in browser`, base.BrandName),
 		Args:    cobra.NoArgs,
-		Example: "ucloud signup",
+		Example: fmt.Sprintf("%s signup", base.BrandNameLower),
 		Run: func(cmd *cobra.Command, args []string) {
-			openbrowser("https://passport.ucloud.cn/#register")
+			var url string
+			if base.BrandNameLower == "ucloud" {
+				url = "https://passport.ucloud.cn/#register"
+			} else {
+				url = "https://passport.surfercloud.com/#register"
+			}
+			openbrowser(url)
 		},
 	}
 	return cmd

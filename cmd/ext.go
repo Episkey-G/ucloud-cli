@@ -30,8 +30,8 @@ import (
 func NewCmdExt() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "ext",
-		Short: "extended commands of UCloud CLI",
-		Long:  "extended commands of UCloud CLI",
+		Short: fmt.Sprintf("extended commands of %s CLI", base.BrandName),
+		Long:  fmt.Sprintf("extended commands of %s CLI", base.BrandName),
 	}
 	cmd.AddCommand(NewCmdExtUHost())
 	return cmd
@@ -59,7 +59,7 @@ func NewCmdExtUHostSwitchEIP() *cobra.Command {
 		Use:     "switch-eip",
 		Short:   "Switch EIP for UHost instances",
 		Long:    "Switch EIP for UHost instances",
-		Example: "ucloud ext uhost switch-eip --uhost-id uhost-1n1sxx2,uhost-li4jxx1 --create-eip-bandwidth-mb 2",
+		Example: fmt.Sprintf("%s ext uhost switch-eip --uhost-id uhost-1n1sxx2,uhost-li4jxx1 --create-eip-bandwidth-mb 2", base.BrandNameLower),
 		Run: func(c *cobra.Command, args []string) {
 			project = base.PickResourceID(project)
 			eipAddrMap := make(map[string]bool)

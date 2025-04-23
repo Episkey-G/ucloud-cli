@@ -62,8 +62,8 @@ func NewCmdGsshList(out io.Writer) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:     "list",
 		Short:   "List all GlobalSSH instances",
-		Long:    `List all GlobalSSH instances`,
-		Example: "ucloud gssh list",
+		Long:    "List all GlobalSSH instances",
+		Example: fmt.Sprintf("%s gssh list", base.BrandNameLower),
 		Run: func(cmd *cobra.Command, args []string) {
 			var areaMap = map[string]string{
 				"洛杉矶":  "LosAngeles",
@@ -164,7 +164,7 @@ func NewCmdGsshCreate() *cobra.Command {
 		Use:     "create",
 		Short:   "Create GlobalSSH instance",
 		Long:    "Create GlobalSSH instance",
-		Example: "ucloud gssh create --location Washington --target-ip 8.8.8.8",
+		Example: fmt.Sprintf("%s gssh create --location Washington --target-ip 8.8.8.8", base.BrandNameLower),
 		Run: func(cmd *cobra.Command, args []string) {
 			port := *req.Port
 			for code, area := range areaCodeMap {
@@ -188,7 +188,7 @@ func NewCmdGsshCreate() *cobra.Command {
 	flags := cmd.Flags()
 	flags.SortFlags = false
 
-	req.AreaCode = cmd.Flags().String("location", "", "Required. Location of the source server. See 'ucloud gssh location'")
+	req.AreaCode = cmd.Flags().String("location", "", fmt.Sprintf("Required. Location of the source server. See '%s gssh location'", base.BrandNameLower))
 	targetIP = cmd.Flags().IP("target-ip", nil, "Required. IP of the source server. Required")
 	bindProjectID(req, flags)
 	req.Port = cmd.Flags().Int("port", 22, "Optional. Port of The SSH service between 1 and 65535. Do not use ports such as 80, 443 or 65123.")
@@ -223,7 +223,7 @@ func NewCmdGsshDelete() *cobra.Command {
 		Use:     "delete",
 		Short:   "Delete GlobalSSH instance",
 		Long:    "Delete GlobalSSH instance",
-		Example: "ucloud gssh delete --gssh-id uga-xx1  --id uga-xx2",
+		Example: fmt.Sprintf("%s gssh delete --gssh-id uga-xx1  --id uga-xx2", base.BrandNameLower),
 		Run: func(cmd *cobra.Command, args []string) {
 			req.ProjectId = sdk.String(base.PickResourceID(*req.ProjectId))
 			for _, id := range *gsshIds {
@@ -258,7 +258,7 @@ func NewCmdGsshModify() *cobra.Command {
 		Use:     "update",
 		Short:   "Update GlobalSSH instance",
 		Long:    "Update GlobalSSH instance, including port and remark attribute",
-		Example: "ucloud gssh update --gssh-id uga-xxx --port 22",
+		Example: fmt.Sprintf("%s gssh update --gssh-id uga-xxx --port 22", base.BrandNameLower),
 		Run: func(cmd *cobra.Command, args []string) {
 			gsshModifyPortReq.ProjectId = sdk.String(project)
 			gsshModifyRemarkReq.ProjectId = sdk.String(project)

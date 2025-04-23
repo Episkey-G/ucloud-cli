@@ -20,15 +20,15 @@ import (
 	"strings"
 
 	"github.com/spf13/cobra"
+	"github.com/ucloud/ucloud-cli/base"
+	"github.com/ucloud/ucloud-cli/ux"
 	"github.com/ucloud/ucloud-sdk-go/ucloud/request"
 
 	"github.com/ucloud/ucloud-sdk-go/private/services/uhost"
 	"github.com/ucloud/ucloud-sdk-go/services/udisk"
 	sdk "github.com/ucloud/ucloud-sdk-go/ucloud"
 
-	"github.com/ucloud/ucloud-cli/base"
 	"github.com/ucloud/ucloud-cli/model/status"
-	"github.com/ucloud/ucloud-cli/ux"
 )
 
 // NewCmdDisk ucloud disk
@@ -249,7 +249,7 @@ func NewCmdDiskAttach(out io.Writer) *cobra.Command {
 		Use:     "attach",
 		Short:   "Attach udisk instances to an uhost",
 		Long:    "Attach udisk instances to an uhost",
-		Example: "ucloud udisk attach --uhost-id uhost-xxxx --udisk-id bs-xxx1,bs-xxx2",
+		Example: fmt.Sprintf("%s udisk attach --uhost-id uhost-xxxx --udisk-id bs-xxx1,bs-xxx2", base.BrandNameLower),
 		Run: func(cmd *cobra.Command, args []string) {
 			for _, id := range *udiskIDs {
 				id = base.PickResourceID(id)
@@ -302,7 +302,13 @@ func NewCmdDiskDetach(out io.Writer) *cobra.Command {
 		Short: "Detach udisk instances from an uhost",
 		Long:  "Detach udisk instances from an uhost",
 		Run: func(cmd *cobra.Command, args []string) {
-			text := `Please confirm that you have already unmounted file system corresponding to this hard drive,(See "https://docs.ucloud.cn/storage_cdn/udisk/userguide/umount" for help), otherwise it will cause file system damage and UHost cannot be normally shut down. Sure to detach?`
+			var docURL string
+			if base.BrandNameLower == "ucloud" {
+				docURL = "https://docs.ucloud.cn/storage_cdn/udisk/userguide/umount"
+			} else {
+				docURL = "https://www.surfercloud.com/en/docs/udisk/userguide/umount"
+			}
+			text := fmt.Sprintf(`Please confirm that you have already unmounted file system corresponding to this hard drive,(See "%s" for help), otherwise it will cause file system damage and UHost cannot be normally shut down. Sure to detach?`, docURL)
 			if !*yes {
 				sure, err := ux.Prompt(text)
 				if err != nil {
@@ -465,7 +471,13 @@ func NewCmdDiskClone(out io.Writer) *cobra.Command {
 	req.ChargeType = flags.String("charge-type", "Month", "Optional.'Year',pay yearly;'Month',pay monthly;'Dynamic', pay hourly")
 	req.Quantity = flags.Int("quantity", 1, "Optional. The duration of the instance. N years/months.")
 	enableDataArk = flags.String("enable-data-ark", "false", "Optional. DataArk supports real-time backup, which can restore the udisk back to any moment within the last 12 hours.")
-	req.CouponId = flags.String("coupon-id", "", "Optional. Coupon ID, The Coupon can deduct part of the payment,see https://accountv2.ucloud.cn")
+	var couponURL string
+	if base.BrandNameLower == "ucloud" {
+		couponURL = "https://accountv2.ucloud.cn"
+	} else {
+		couponURL = "https://passport.surfercloud.com/login"
+	}
+	req.CouponId = flags.String("coupon-id", "", fmt.Sprintf("Optional. Coupon ID, The Coupon can deduct part of the payment,see %s", couponURL))
 	async = flags.Bool("async", false, "Optional. Do not wait for the long-running operation to finish.")
 
 	flags.SetFlagValues("charge-type", "Month", "Year", "Dynamic", "Trial")
