@@ -847,11 +847,7 @@ func mergeConfigIns(ins *AggConfig) {
 }
 
 func init() {
-	if BrandNameLower == "ucloud" {
-		DefaultBaseURL = "https://api.ucloud.cn/"
-	} else {
-		DefaultBaseURL = fmt.Sprintf("https://api.%s/", BrandURL)
-	}
+	DefaultBaseURL = fmt.Sprintf("https://api.%s/", BrandURL)
 	//配置日志
 	err := initLog()
 	if err != nil {

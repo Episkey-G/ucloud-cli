@@ -32,12 +32,7 @@ func NewCmdSignup() *cobra.Command {
 		Args:    cobra.NoArgs,
 		Example: fmt.Sprintf("%s signup", base.BrandNameLower),
 		Run: func(cmd *cobra.Command, args []string) {
-			var url string
-			if base.BrandNameLower == "ucloud" {
-				url = "https://passport.ucloud.cn/#register"
-			} else {
-				url = "https://passport.surfercloud.com/#register"
-			}
+			url := fmt.Sprintf("https://passport.%s/#register", base.BrandURL)
 			openbrowser(url)
 		},
 	}

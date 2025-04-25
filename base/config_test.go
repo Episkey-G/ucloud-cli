@@ -19,12 +19,7 @@ const credentialJSON = `[
 
 func TestAggConfigManager(t *testing.T) {
 	os.MkdirAll(ConfigPath, 0700)
-	var baseURL string
-	if BrandNameLower == "ucloud" {
-		baseURL = "https://api.ucloud.cn/"
-	} else {
-		baseURL = fmt.Sprintf("https://api.%s/", BrandURL)
-	}
+	baseURL := fmt.Sprintf("https://api.%s/", BrandURL)
 	configJSON := fmt.Sprintf(cliConfigJSON, baseURL, baseURL)
 	err := ioutil.WriteFile(ConfigPath+"/config.json", []byte(configJSON), LocalFileMode)
 	if err != nil {

@@ -4,5 +4,5 @@ package base
 var (
 	BrandName      = "UCloud"
 	BrandNameLower = "ucloud"
-	BrandURL       = BrandNameLower + ".com"
+	BrandURL       = "ucloud.cn"
 )

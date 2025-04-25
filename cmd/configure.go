@@ -113,12 +113,7 @@ func printHello() {
 	base.Cxt.Printf("You are logged in as: [%s]\n", userInfo.UserEmail)
 	certified := isUserCertified(userInfo)
 	if !certified {
-		var authURL string
-		if base.BrandNameLower == "ucloud" {
-			authURL = "https://accountv2.ucloud.cn/authentication"
-		} else {
-			authURL = "https://passport.surfercloud.com/authentication"
-		}
+		authURL := fmt.Sprintf("https://accountv2.%s/authentication", base.BrandURL)
 		base.Cxt.Println(fmt.Sprintf("\nWarning: Please authenticate the account with your valid documentation at '%s'.", authURL))
 	}
 	base.Cxt.Println(fmt.Sprintf(helloUcloud, base.BrandNameLower))
@@ -312,11 +307,7 @@ func NewCmdConfig() *cobra.Command {
 	flags.StringVar(&cfg.Region, "region", "", fmt.Sprintf("Optional. Set default region. For instance 'cn-bj2' See '%s region'", base.BrandNameLower))
 	flags.StringVar(&cfg.Zone, "zone", "", fmt.Sprintf("Optional. Set default zone. For instance 'cn-bj2-02'. See '%s region'", base.BrandNameLower))
 	flags.StringVar(&cfg.ProjectID, "project-id", "", fmt.Sprintf("Optional. Set default project. For instance 'org-xxxxxx'. See '%s project list'", base.BrandNameLower))
-	if base.BrandNameLower == "ucloud" {
-		flags.StringVar(&cfg.BaseURL, "base-url", "", "Optional. Set default base url. For instance 'https://api.ucloud.cn/'")
-	} else {
-		flags.StringVar(&cfg.BaseURL, "base-url", "", "Optional. Set default base url. For instance 'https://api.surfercloud.com/'")
-	}
+	flags.StringVar(&cfg.BaseURL, "base-url", "", fmt.Sprintf("Optional. Set default base url. For instance 'https://api.%s/'", base.BrandURL))
 	flags.IntVar(&cfg.Timeout, "timeout-sec", 0, "Optional. Set default timeout for requesting API. Unit: seconds")
 	cfg.MaxRetryTimes = flags.Int("max-retry-times", 0, "Optional. Set default max-retry-times for idempotent APIs which can be called many times without side effect, for example 'ReleaseEIP'")
 	flags.StringVar(&active, "active", "", "Optional. Mark the profile to be effective or not. Accept valeus: true or false")
@@ -397,11 +388,7 @@ func NewCmdConfigAdd() *cobra.Command {
 	flags.StringVar(&cfg.Region, "region", "", fmt.Sprintf("Optional. Set default region. For instance 'cn-bj2' See '%s region'", base.BrandNameLower))
 	flags.StringVar(&cfg.Zone, "zone", "", fmt.Sprintf("Optional. Set default zone. For instance 'cn-bj2-02'. See '%s region'", base.BrandNameLower))
 	flags.StringVar(&cfg.ProjectID, "project-id", "", fmt.Sprintf("Optional. Set default project. For instance 'org-xxxxxx'. See '%s project list'", base.BrandNameLower))
-	if base.BrandNameLower == "ucloud" {
-		flags.StringVar(&cfg.BaseURL, "base-url", base.DefaultBaseURL, "Optional. Set default base url. For instance 'https://api.ucloud.cn/'")
-	} else {
-		flags.StringVar(&cfg.BaseURL, "base-url", base.DefaultBaseURL, "Optional. Set default base url. For instance 'https://api.surfercloud.com/'")
-	}
+	flags.StringVar(&cfg.BaseURL, "base-url", base.DefaultBaseURL, fmt.Sprintf("Optional. Set default base url. For instance 'https://api.%s/'", base.BrandURL))
 	flags.IntVar(&cfg.Timeout, "timeout-sec", base.DefaultTimeoutSec, "Optional. Set default timeout for requesting API. Unit: seconds")
 	cfg.MaxRetryTimes = flags.Int("max-retry-times", base.DefaultMaxRetryTimes, "Optional. Set default max-retry-times for idempotent APIs which can be called many times without side effect, for example 'ReleaseEIP'")
 	flags.StringVar(&active, "active", "false", "Optional. Mark the profile to be effective or not. Accept valeus: true or false")
@@ -537,11 +524,7 @@ func NewCmdConfigUpdate() *cobra.Command {
 	flags.StringVar(&cfg.Region, "region", "", fmt.Sprintf("Optional. Set default region. For instance 'cn-bj2' See '%s region'", base.BrandNameLower))
 	flags.StringVar(&cfg.Zone, "zone", "", fmt.Sprintf("Optional. Set default zone. For instance 'cn-bj2-02'. See '%s region'", base.BrandNameLower))
 	flags.StringVar(&cfg.ProjectID, "project-id", "", fmt.Sprintf("Optional. Set default project. For instance 'org-xxxxxx'. See '%s project list'", base.BrandNameLower))
-	if base.BrandNameLower == "ucloud" {
-		flags.StringVar(&cfg.BaseURL, "base-url", "", "Optional. Set default base url. For instance 'https://api.ucloud.cn/'")
-	} else {
-		flags.StringVar(&cfg.BaseURL, "base-url", "", "Optional. Set default base url. For instance 'https://api.surfercloud.com/'")
-	}
+	flags.StringVar(&cfg.BaseURL, "base-url", "", fmt.Sprintf("Optional. Set default base url. For instance 'https://api.%s/'", base.BrandURL))
 	flags.StringVar(&timeout, "timeout-sec", "", "Optional. Set default timeout for requesting API. Unit: seconds")
 	flags.StringVar(&maxRetries, "max-retry-times", "", "Optional. Set default max retry times for idempotent APIs which can be called many times without side effect, for example 'ReleaseEIP'")
 	flags.StringVar(&active, "active", "", "Optional. Mark the profile to be effective")

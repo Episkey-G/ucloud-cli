@@ -513,12 +513,8 @@ func NewCmdUHostCreate() *cobra.Command {
 	bindRegion(req, flags)
 	bindZone(req, flags)
 
-	var docURL string
-	if base.BrandNameLower == "ucloud" {
-		docURL = "https://docs.ucloud.cn/api/uhost-api/uhost_type"
-	} else {
-		docURL = "https://www.surfercloud.com/en/docs/api/uhost-api/uhost_type"
-	}
+	docURL := fmt.Sprintf("https://docs.%s/api/uhost-api/uhost_type", base.BrandURL)
+
 	req.MachineType = flags.String("machine-type", "N", fmt.Sprintf("Optional. Accept values: N, C, G, O, OS. Forward to %s for details", docURL))
 	req.MinimalCpuPlatform = flags.String("minimal-cpu-platform", "", "Optional. Accept values: Intel/Auto, Intel/IvyBridge, Intel/Haswell, Intel/Broadwell, Intel/Skylake, Intel/Cascadelake")
 	req.UHostType = flags.String("type", "", fmt.Sprintf("Optional. Accept values: N1, N2, N3, G1, G2, G3, I1, I2, C1. Forward to %s for details", docURL))
@@ -529,19 +525,14 @@ func NewCmdUHostCreate() *cobra.Command {
 	req.Disks[0].Type = flags.String("os-disk-type", "CLOUD_SSD", "Optional. Enumeration value. 'LOCAL_NORMAL', Ordinary local disk; 'CLOUD_NORMAL', Ordinary cloud disk; 'LOCAL_SSD',local ssd disk; 'CLOUD_SSD',cloud ssd disk; 'EXCLUSIVE_LOCAL_DISK',big data. The disk only supports a limited combination.")
 	req.Disks[0].Size = flags.Int("os-disk-size-gb", 20, "Optional. Default 20G. Windows should be bigger than 40G Unit GB")
 	req.Disks[0].BackupType = flags.String("os-disk-backup-type", "NONE", "Optional. Enumeration value, 'NONE' or 'DATAARK'. DataArk supports real-time backup, which can restore the disk back to any moment within the last 12 hours. (Normal Local Disk and Normal Cloud Disk Only)")
-	req.Disks[1].Type = flags.String("data-disk-type", "CLOUD_SSD", "Optional. Accept values: 'LOCAL_NORMAL','LOCAL_SSD','CLOUD_NORMAL',CLOUD_SSD','CLOUD_RSSD','EXCLUSIVE_LOCAL_DISK' and 'NONE'. 'LOCAL_NORMAL', Ordinary local disk; 'CLOUD_NORMAL', Ordinary cloud disk; 'LOCAL_SSD',local ssd disk; 'CLOUD_SSD',cloud ssd disk; 'CLOUD_RSSD', coud rssd disk; 'EXCLUSIVE_LOCAL_DISK',big data. The disk only supports a limited combination. 'NONE', create uhost without data disk. More details https://docs.ucloud.cn/api/uhost-api/disk_type")
+	req.Disks[1].Type = flags.String("data-disk-type", "CLOUD_SSD", fmt.Sprintf("Optional. Accept values: 'LOCAL_NORMAL','LOCAL_SSD','CLOUD_NORMAL',CLOUD_SSD','CLOUD_RSSD','EXCLUSIVE_LOCAL_DISK' and 'NONE'. 'LOCAL_NORMAL', Ordinary local disk; 'CLOUD_NORMAL', Ordinary cloud disk; 'LOCAL_SSD',local ssd disk; 'CLOUD_SSD',cloud ssd disk; 'CLOUD_RSSD', coud rssd disk; 'EXCLUSIVE_LOCAL_DISK',big data. The disk only supports a limited combination. 'NONE', create uhost without data disk. More details https://docs.%s/api/uhost-api/disk_type", base.BrandURL))
 	req.Disks[1].Size = flags.Int("data-disk-size-gb", 20, "Optional. Disk size. Unit GB")
 	req.Disks[1].BackupType = flags.String("data-disk-backup-type", "NONE", "Optional. Enumeration value, 'NONE' or 'DATAARK'. DataArk supports real-time backup, which can restore the disk back to any moment within the last 12 hours. (Normal Local Disk and Normal Cloud Disk Only)")
 	flags.StringVar(&firewallId, "firewall-id", "", fmt.Sprintf("Optional. Firewall Id, default: Web recommended firewall. see '%s firewall list'.", base.BrandNameLower))
 	flags.StringSliceVar(&secGroupIds, "security-group-id", nil, "Optional. Security Group Id. Before using security group function, please confirm the account has such permission. When both firewall-id and security-group-id are set, the security-group-id will be ignored")
 	req.Tag = flags.String("group", "Default", "Optional. Business group")
 	req.IsolationGroup = flags.String("isolation-group", "", fmt.Sprintf("Optional. Resource ID of isolation group. see '%s uhost isolation-group list'", base.BrandNameLower))
-	var userDataDocURL string
-	if base.BrandNameLower == "ucloud" {
-		userDataDocURL = "https://docs.ucloud.cn/uhost/guide/metadata/userdata"
-	} else {
-		userDataDocURL = "https://www.surfercloud.com/en/docs/uhost/guide/metadata/userdata"
-	}
+	userDataDocURL := fmt.Sprintf("https://docs.%s/uhost/guide/metadata/userdata", base.BrandURL)
 	flags.StringVar(&userData, "user-data", "", fmt.Sprintf("Optional. Conflicts with `user-data-base64`. Customize the startup behaviors when launching the instance. Forward to %s for details.", userDataDocURL))
 	flags.StringVar(&userDataBase64, "user-data-base64", "", fmt.Sprintf("Optional. Conflicts with `user-data`. Customize the startup behaviors when launching the instance. The value must be base64-encode. Forward to %s for details.", userDataDocURL))
 
