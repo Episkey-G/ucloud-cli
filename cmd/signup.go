@@ -32,7 +32,7 @@ func NewCmdSignup() *cobra.Command {
 		Args:    cobra.NoArgs,
 		Example: fmt.Sprintf("%s signup", base.BrandNameLower),
 		Run: func(cmd *cobra.Command, args []string) {
-			url := fmt.Sprintf("https://passport.%s/#register", base.BrandURL)
+			url := fmt.Sprintf("%s", base.BrandRegisterURL)
 			openbrowser(url)
 		},
 	}

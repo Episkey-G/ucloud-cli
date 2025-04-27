@@ -847,7 +847,7 @@ func mergeConfigIns(ins *AggConfig) {
 }
 
 func init() {
-	DefaultBaseURL = fmt.Sprintf("https://api.%s/", BrandURL)
+	DefaultBaseURL = fmt.Sprintf("%s", BrandAPIURL)
 	//配置日志
 	err := initLog()
 	if err != nil {

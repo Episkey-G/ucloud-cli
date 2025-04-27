@@ -22,7 +22,7 @@ import (
 var DefaultDasURL string
 
 func init() {
-	DefaultDasURL = fmt.Sprintf("https://das-rpt.%s/log", BrandURL)
+	DefaultDasURL = fmt.Sprintf("%s", BrandLogURL)
 }
 
 // Logger 日志

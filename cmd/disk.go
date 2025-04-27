@@ -302,7 +302,7 @@ func NewCmdDiskDetach(out io.Writer) *cobra.Command {
 		Short: "Detach udisk instances from an uhost",
 		Long:  "Detach udisk instances from an uhost",
 		Run: func(cmd *cobra.Command, args []string) {
-			docURL := fmt.Sprintf("https://docs.%s/storage_cdn/udisk/userguide/umount", base.BrandURL)
+			docURL := fmt.Sprintf("%s", base.BrandUmountURL)
 			text := fmt.Sprintf(`Please confirm that you have already unmounted file system corresponding to this hard drive,(See "%s" for help), otherwise it will cause file system damage and UHost cannot be normally shut down. Sure to detach?`, docURL)
 			if !*yes {
 				sure, err := ux.Prompt(text)
@@ -466,7 +466,7 @@ func NewCmdDiskClone(out io.Writer) *cobra.Command {
 	req.ChargeType = flags.String("charge-type", "Month", "Optional.'Year',pay yearly;'Month',pay monthly;'Dynamic', pay hourly")
 	req.Quantity = flags.Int("quantity", 1, "Optional. The duration of the instance. N years/months.")
 	enableDataArk = flags.String("enable-data-ark", "false", "Optional. DataArk supports real-time backup, which can restore the udisk back to any moment within the last 12 hours.")
-	couponURL := fmt.Sprintf("https://accountv2.%s", base.BrandURL)
+	couponURL := fmt.Sprintf("%s", base.BrandAccountURL)
 	req.CouponId = flags.String("coupon-id", "", fmt.Sprintf("Optional. Coupon ID, The Coupon can deduct part of the payment,see %s", couponURL))
 	async = flags.Bool("async", false, "Optional. Do not wait for the long-running operation to finish.")
 

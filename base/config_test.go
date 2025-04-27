@@ -19,7 +19,7 @@ const credentialJSON = `[
 
 func TestAggConfigManager(t *testing.T) {
 	os.MkdirAll(ConfigPath, 0700)
-	baseURL := fmt.Sprintf("https://api.%s/", BrandURL)
+	baseURL := fmt.Sprintf("%s", BrandAPIURL)
 	configJSON := fmt.Sprintf(cliConfigJSON, baseURL, baseURL)
 	err := ioutil.WriteFile(ConfigPath+"/config.json", []byte(configJSON), LocalFileMode)
 	if err != nil {
