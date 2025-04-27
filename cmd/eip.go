@@ -73,8 +73,8 @@ func NewCmdEIPList(out io.Writer) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:     "list",
 		Short:   "List all EIP instances",
-		Long:    `List all EIP instances`,
-		Example: "ucloud eip list",
+		Long:    "List all EIP instances",
+		Example: fmt.Sprintf("%s eip list", base.BrandNameLower),
 		Run: func(cmd *cobra.Command, args []string) {
 			var eipList []unet.UnetEIPSet
 			if fetchAll || pageOff {
@@ -228,7 +228,7 @@ func NewCmdEIPAllocate() *cobra.Command {
 		Use:     "allocate",
 		Short:   "Allocate EIP",
 		Long:    "Allocate EIP",
-		Example: "ucloud eip allocate --line BGP --bandwidth-mb 2",
+		Example: fmt.Sprintf("%s eip allocate --line BGP --bandwidth-mb 2", base.BrandNameLower),
 		Run: func(cmd *cobra.Command, args []string) {
 			if *req.OperatorName == "" {
 				*req.OperatorName = getEIPLine(*req.Region)
@@ -277,7 +277,7 @@ func NewCmdEIPBind() *cobra.Command {
 		Use:     "bind",
 		Short:   "Bind EIP with uhost",
 		Long:    "Bind EIP with uhost",
-		Example: "ucloud eip bind --eip-id eip-xxx --resource-id uhost-xxx",
+		Example: fmt.Sprintf("%s eip bind --eip-id eip-xxx --resource-id uhost-xxx", base.BrandNameLower),
 		Run: func(cmd *cobra.Command, args []string) {
 			for _, eipID := range eipIDs {
 				bindEIP(resourceID, resourceType, &eipID, projectID, region)
@@ -363,7 +363,7 @@ func NewCmdEIPUnbind() *cobra.Command {
 		Use:     "unbind",
 		Short:   "Unbind EIP with uhost",
 		Long:    "Unbind EIP with uhost",
-		Example: "ucloud eip unbind --eip-id eip-xxx",
+		Example: fmt.Sprintf("%s eip unbind --eip-id eip-xxx", base.BrandNameLower),
 		Run: func(cmd *cobra.Command, args []string) {
 			req.ProjectId = sdk.String(base.PickResourceID(*req.ProjectId))
 			for _, eip := range eipIDs {
@@ -435,7 +435,7 @@ func NewCmdEIPRelease() *cobra.Command {
 		Use:     "release",
 		Short:   "Release EIP",
 		Long:    "Release EIP",
-		Example: "ucloud eip release --eip-id eip-xx1,eip-xx2",
+		Example: fmt.Sprintf("%s eip release --eip-id eip-xx1,eip-xx2", base.BrandNameLower),
 		Run: func(cmd *cobra.Command, args []string) {
 			req.ProjectId = sdk.String(base.PickResourceID(*req.ProjectId))
 			for _, id := range ids {
@@ -470,8 +470,8 @@ func NewCmdEIPModifyBandwidth() *cobra.Command {
 		Use:     "modify-bw",
 		Short:   "Modify bandwith of EIP instances",
 		Long:    "Modify bandwith of EIP instances",
-		Example: "ucloud eip modify-bw --eip-id eip-xx1,eip-xx2 --bandwidth-mb 20",
-		// Deprecated: "use 'ucloud eip modiy'",
+		Example: fmt.Sprintf("%s eip modify-bw --eip-id eip-xx1,eip-xx2 --bandwidth-mb 20", base.BrandNameLower),
+		// Deprecated: fmt.Sprintf("use '%s eip modiy'", base.BrandNameLower),
 		Run: func(cmd *cobra.Command, args []string) {
 			for _, id := range ids {
 				id = base.PickResourceID(id)
@@ -506,7 +506,7 @@ func NewCmdEIPSetChargeMode() *cobra.Command {
 		Use:     "modify-traffic-mode",
 		Short:   "Modify charge mode of EIP instances",
 		Long:    "Modify charge mode of EIP instances",
-		Example: "ucloud eip modify-traffic-mode --eip-id eip-xx1,eip-xx2 --traffic-mode Traffic",
+		Example: fmt.Sprintf("%s eip modify-traffic-mode --eip-id eip-xx1,eip-xx2 --traffic-mode Traffic", base.BrandNameLower),
 		Run: func(cmd *cobra.Command, args []string) {
 			for _, id := range ids {
 				id = base.PickResourceID(id)
@@ -549,7 +549,7 @@ func NewCmdEIPJoinSharedBW() *cobra.Command {
 		Use:     "join-shared-bw",
 		Short:   "Join shared bandwidth",
 		Long:    "Join shared bandwidth",
-		Example: "ucloud eip join-shared-bw --eip-id eip-xxx --shared-bw-id bwshare-xxx",
+		Example: fmt.Sprintf("%s eip join-shared-bw --eip-id eip-xxx --shared-bw-id bwshare-xxx", base.BrandNameLower),
 		Run: func(c *cobra.Command, args []string) {
 			for _, eip := range eipIDs {
 				req.EIPIds = append(req.EIPIds, base.PickResourceID(eip))
@@ -567,8 +567,8 @@ func NewCmdEIPJoinSharedBW() *cobra.Command {
 	flags.SortFlags = false
 	flags.StringSliceVar(&eipIDs, "eip-id", nil, "Required. Resource ID of EIPs to join shared bandwdith")
 	req.ShareBandwidthId = flags.String("shared-bw-id", "", "Required. Resource ID of shared bandwidth to be joined")
-	req.Region = flags.String("region", base.ConfigIns.Region, "Optional. Region, see 'ucloud region'")
-	req.ProjectId = flags.String("project-id", base.ConfigIns.ProjectID, "Optional. Project-id, see 'ucloud project list'")
+	req.Region = flags.String("region", base.ConfigIns.Region, fmt.Sprintf("Optional. Region, see '%s region'", base.BrandNameLower))
+	req.ProjectId = flags.String("project-id", base.ConfigIns.ProjectID, fmt.Sprintf("Optional. Project-id, see '%s project list'", base.BrandNameLower))
 	flags.SetFlagValuesFunc("eip-id", func() []string {
 		return getAllEip(*req.ProjectId, *req.Region, nil, []string{status.EIP_CHARGE_BANDWIDTH, status.EIP_CHARGE_TRAFFIC})
 	})
@@ -590,7 +590,7 @@ func NewCmdEIPLeaveSharedBW() *cobra.Command {
 		Use:     "leave-shared-bw",
 		Short:   "Leave shared bandwidth",
 		Long:    "Leave shared bandwidth",
-		Example: "ucloud eip leave-shared-bw --eip-id eip-b2gvu3",
+		Example: fmt.Sprintf("%s eip leave-shared-bw --eip-id eip-b2gvu3", base.BrandNameLower),
 		Run: func(c *cobra.Command, args []string) {
 			if *req.ShareBandwidthId == "" {
 				for _, eipID := range eipIDs {
@@ -633,8 +633,8 @@ func NewCmdEIPLeaveSharedBW() *cobra.Command {
 	req.Bandwidth = flags.Int("bandwidth-mb", 1, "Required. Bandwidth of EIP after leaving shared bandwidth, ranging [1,300] for 'Traffic' charge mode, ranging [1,800] for 'Bandwidth' charge mode. Unit:Mb")
 	req.PayMode = flags.String("traffic-mode", "Bandwidth", "Optional. Charge mode of the EIP after leaving shared bandwidth, 'Bandwidth' or 'Traffic'")
 	req.ShareBandwidthId = flags.String("shared-bw-id", "", "Optional. Resource ID of shared bandwidth instance, assign this flag to make the operation faster")
-	req.Region = flags.String("region", base.ConfigIns.Region, "Optional. Region, see 'ucloud region'")
-	req.ProjectId = flags.String("project-id", base.ConfigIns.ProjectID, "Optional. Project-id, see 'ucloud project list'")
+	req.Region = flags.String("region", base.ConfigIns.Region, fmt.Sprintf("Optional. Region, see '%s region'", base.BrandNameLower))
+	req.ProjectId = flags.String("project-id", base.ConfigIns.ProjectID, fmt.Sprintf("Optional. Project-id, see '%s project list'", base.BrandNameLower))
 
 	flags.SetFlagValues("traffic-mode", "Bandwidth", "Traffic")
 	flags.SetFlagValuesFunc("eip-id", func() []string {

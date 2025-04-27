@@ -35,7 +35,7 @@ const RepeatsField = "repeats"
 const ConcurrentField = "concurrent"
 const DefaultConcurrent = 20
 const HelpField = "help"
-const HelpInfo = `Usage: ucloud api [options] --Action actionName --param1 value1 --param2 value2 ...
+const HelpInfo = `Usage: %s api [options] --Action actionName --param1 value1 --param2 value2 ...
 Options:
       --local-file string  the path of the local file which contains the api parameters
       --repeats string     the number of repeats
@@ -50,7 +50,7 @@ func NewCmdAPI(out io.Writer) *cobra.Command {
 		Long:  "Call API",
 		Run: func(c *cobra.Command, args []string) {
 			if containHelp(args) {
-				fmt.Fprintln(out, HelpInfo)
+				fmt.Fprintln(out, fmt.Sprintf(HelpInfo, base.BrandNameLower))
 				return
 			}
 			params, err := parseParamsFromCmdLine(args)

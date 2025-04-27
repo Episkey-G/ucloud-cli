@@ -40,8 +40,8 @@ var poller = base.NewSpoller(describeUdbByID, base.Cxt.GetWriter())
 func NewCmdMysql() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "mysql",
-		Short: "Manipulate MySQL on UCloud platform",
-		Long:  "Manipulate MySQL on UCloud platform",
+		Short: fmt.Sprintf("Manipulate MySQL on %s platform", base.BrandName),
+		Long:  fmt.Sprintf("Manipulate MySQL on %s platform", base.BrandName),
 	}
 	out := base.Cxt.GetWriter()
 	cmd.AddCommand(NewCmdMysqlDB(out))
@@ -83,8 +83,8 @@ func NewCmdMysqlCreate(out io.Writer) *cobra.Command {
 	req := base.BizClient.NewCreateUDBInstanceRequest()
 	cmd := &cobra.Command{
 		Use:   "create",
-		Short: "Create MySQL instance on UCloud platform",
-		Long:  "Create MySQL instance on UCloud platform",
+		Short: fmt.Sprintf("Create MySQL instance on %s platform", base.BrandName),
+		Long:  fmt.Sprintf("Create MySQL instance on %s platform", base.BrandName),
 		Run: func(c *cobra.Command, args []string) {
 			confID = base.PickResourceID(confID)
 			id, err := strconv.Atoi(confID)
@@ -145,17 +145,17 @@ func NewCmdMysqlCreate(out io.Writer) *cobra.Command {
 	bindZone(req, flags)
 	req.DBTypeId = flags.String("version", "", "Required. Version of udb instance")
 	req.Name = flags.String("name", "", "Required. Name of udb instance to create, at least 6 letters")
-	flags.StringVar(&confID, "conf-id", "", "Required. ConfID of configuration. see 'ucloud mysql conf list'")
+	flags.StringVar(&confID, "conf-id", "", fmt.Sprintf("Required. ConfID of configuration. see '%s mysql conf list'", base.BrandNameLower))
 	req.AdminUser = flags.String("admin-user-name", "root", "Optional. Name of udb instance's administrator")
 	req.AdminPassword = flags.String("password", "", "Required. Password of udb instance's administrator")
-	flags.IntVar(&backupID, "backup-id", -1, "Optional. BackupID of the backup which the newly created UDB instance will recover from if specified. See 'ucloud mysql backup list'")
+	flags.IntVar(&backupID, "backup-id", -1, fmt.Sprintf("Optional. BackupID of the backup which the newly created UDB instance will recover from if specified. See '%s mysql backup list'", base.BrandNameLower))
 	req.Port = flags.Int("port", 3306, "Optional. Port of udb instance")
 	flags.StringVar(&diskType, "disk-type", "", "Optional. Setting this flag means using SSD disk. Accept values: 'normal','sata_ssd','pcie_ssd'")
 	req.DiskSpace = flags.Int("disk-size-gb", 20, "Optional. Disk size of udb instance. From 20 to 3000 according to memory size. Unit GB")
 	req.MemoryLimit = flags.Int("memory-size-gb", 1, "Optional. Memory size of udb instance. From 1 to 128. Unit GB")
 	req.InstanceMode = flags.String("mode", "Normal", "Optional. Mode of udb instance. Normal or HA, HA means high-availability. Both the normal and high-availability versions can create master-slave synchronization for data redundancy and read/write separation. The high-availability version provides a dual-master hot standby architecture to avoid database unavailability due to downtime or hardware failure. One more thing. It does better job for master-slave synchronization and disaster recovery using the InnoDB engine")
-	req.VPCId = flags.String("vpc-id", "", "Optional. Resource ID of VPC which the UDB to create belong to. See 'ucloud vpc list'")
-	req.SubnetId = flags.String("subnet-id", "", "Optional. Resource ID of subnet that the UDB to create belong to. See 'ucloud subnet list'")
+	req.VPCId = flags.String("vpc-id", "", fmt.Sprintf("Optional. Resource ID of VPC which the UDB to create belong to. See '%s vpc list'", base.BrandNameLower))
+	req.SubnetId = flags.String("subnet-id", "", fmt.Sprintf("Optional. Resource ID of subnet that the UDB to create belong to. See '%s subnet list'", base.BrandNameLower))
 	flags.BoolVar(&async, "async", false, "Optional. Do not wait for the long-running operation to finish.")
 	bindChargeType(req, flags)
 	bindQuantity(req, flags)

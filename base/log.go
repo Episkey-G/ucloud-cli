@@ -18,7 +18,12 @@ import (
 	"github.com/ucloud/ucloud-sdk-go/ucloud/version"
 )
 
-const DefaultDasURL = "https://das-rpt.ucloud.cn/log"
+// DefaultDasURL location of das server
+var DefaultDasURL string
+
+func init() {
+	DefaultDasURL = fmt.Sprintf("%s", BrandLogURL)
+}
 
 // Logger 日志
 var logger *log.Logger

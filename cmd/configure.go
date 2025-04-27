@@ -37,15 +37,15 @@ const helloUcloud = `
   | | | |  __/ | | (_) | | |_| | \__/\ | (_) | |_| | (_| |
   \_| |_/\___|_|_|\___/   \___/ \____/_|\___/ \__,_|\__,_|
 
-If you want add or modify your configurations, run 'ucloud config add/update'
+If you want add or modify your configurations, run '%s config add/update'
 `
 
 // NewCmdInit ucloud init
 func NewCmdInit() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "init",
-		Short: "Initialize UCloud CLI options",
-		Long:  `Initialize UCloud CLI options such as private-key,public-key,default region,zone and project.`,
+		Short: fmt.Sprintf("Initialize %s CLI options", base.BrandName),
+		Long:  fmt.Sprintf(`Initialize %s CLI options such as private-key,public-key,default region,zone and project.`, base.BrandName),
 		Run: func(cmd *cobra.Command, args []string) {
 			if base.ConfigIns.PrivateKey != "" && base.ConfigIns.PublicKey != "" {
 				printHello()
@@ -90,7 +90,7 @@ func NewCmdInit() *cobra.Command {
 			fmt.Printf("Configured default base url:%s\n", base.ConfigIns.BaseURL)
 			fmt.Printf("Configured default timeout_sec:%ds\n", base.ConfigIns.Timeout)
 			fmt.Printf("Active profile name:%s\n", base.ConfigIns.Profile)
-			fmt.Println("You can change the default settings by running 'ucloud config update'")
+			fmt.Printf("You can change the default settings by running '%s config update'\n", base.BrandNameLower)
 			base.ConfigIns.ConfigUploadLog()
 			err = base.AggConfigListIns.Append(base.ConfigIns)
 			if err != nil {
@@ -113,9 +113,10 @@ func printHello() {
 	base.Cxt.Printf("You are logged in as: [%s]\n", userInfo.UserEmail)
 	certified := isUserCertified(userInfo)
 	if !certified {
-		base.Cxt.Println("\nWarning: Please authenticate the account with your valid documentation at 'https://accountv2.ucloud.cn/authentication'.")
+		authURL := fmt.Sprintf("%s", base.BrandAuthURL)
+		base.Cxt.Println(fmt.Sprintf("\nWarning: Please authenticate the account with your valid documentation at '%s'.", authURL))
 	}
-	base.Cxt.Println(helloUcloud)
+	base.Cxt.Println(fmt.Sprintf(helloUcloud, base.BrandNameLower))
 }
 
 // 根据用户设置的region和zone,检查其合法性，补上缺失的部分，给出一个合理的符合用户本意设置的region和zone
@@ -139,7 +140,7 @@ func getReasonableRegionZone(cfg *base.AggConfig) (string, string, error) {
 
 	zones, ok := regionIns.Labels[userRegion]
 	if !ok {
-		return "", "", fmt.Errorf("region[%s] is not exist! See 'ucloud region'", userRegion)
+		return "", "", fmt.Errorf("region[%s] is not exist! See '%s region'", userRegion, base.BrandNameLower)
 	}
 
 	if userZone != "" {
@@ -150,7 +151,7 @@ func getReasonableRegionZone(cfg *base.AggConfig) (string, string, error) {
 			}
 		}
 		if !zoneExist {
-			return "", "", fmt.Errorf("zone[%s] not exist in region[%s]! See 'ucloud config list' and 'ucloud region'", userZone, userRegion)
+			return "", "", fmt.Errorf("zone[%s] not exist in region[%s]! See '%s config list' and '%s region'", userZone, userRegion, base.BrandNameLower, base.BrandNameLower)
 		}
 	} else if len(zones) > 0 {
 		userZone = zones[0]
@@ -167,7 +168,7 @@ func NewCmdConfig() *cobra.Command {
 		Use:     "config",
 		Short:   "add or update configurations",
 		Long:    `add or update configurations, such as private-key, public-key, default region and zone, base-url, timeout-sec, and default project-id`,
-		Example: "ucloud config --profile=test --region cn-bj2 --active true",
+		Example: fmt.Sprintf("%s config --profile=test --region cn-bj2 --active true", base.BrandNameLower),
 		Run: func(c *cobra.Command, args []string) {
 			if cfg.Profile == "" {
 				c.HelpFunc()(c, args)
@@ -303,14 +304,14 @@ func NewCmdConfig() *cobra.Command {
 	flags.StringVar(&cfg.Profile, "profile", "", "Required. Set name of CLI profile")
 	flags.StringVar(&cfg.PublicKey, "public-key", "", "Optional. Set public key")
 	flags.StringVar(&cfg.PrivateKey, "private-key", "", "Optional. Set private key")
-	flags.StringVar(&cfg.Region, "region", "", "Optional. Set default region. For instance 'cn-bj2' See 'ucloud region'")
-	flags.StringVar(&cfg.Zone, "zone", "", "Optional. Set default zone. For instance 'cn-bj2-02'. See 'ucloud region'")
-	flags.StringVar(&cfg.ProjectID, "project-id", "", "Optional. Set default project. For instance 'org-xxxxxx'. See 'ucloud project list")
-	flags.StringVar(&cfg.BaseURL, "base-url", "", "Optional. Set default base url. For instance 'https://api.ucloud.cn/'")
+	flags.StringVar(&cfg.Region, "region", "", fmt.Sprintf("Optional. Set default region. For instance 'cn-bj2' See '%s region'", base.BrandNameLower))
+	flags.StringVar(&cfg.Zone, "zone", "", fmt.Sprintf("Optional. Set default zone. For instance 'cn-bj2-02'. See '%s region'", base.BrandNameLower))
+	flags.StringVar(&cfg.ProjectID, "project-id", "", fmt.Sprintf("Optional. Set default project. For instance 'org-xxxxxx'. See '%s project list'", base.BrandNameLower))
+	flags.StringVar(&cfg.BaseURL, "base-url", "", fmt.Sprintf("Optional. Set default base url. For instance '%s'", base.BrandAPIURL))
 	flags.IntVar(&cfg.Timeout, "timeout-sec", 0, "Optional. Set default timeout for requesting API. Unit: seconds")
 	cfg.MaxRetryTimes = flags.Int("max-retry-times", 0, "Optional. Set default max-retry-times for idempotent APIs which can be called many times without side effect, for example 'ReleaseEIP'")
 	flags.StringVar(&active, "active", "", "Optional. Mark the profile to be effective or not. Accept valeus: true or false")
-	flags.StringVar(&upload, "agree-upload-log", "false", "Optional. Agree to upload log in local file ~/.ucloud/cli.log or not. Accept valeus: true or false")
+	flags.StringVar(&upload, "agree-upload-log", "false", fmt.Sprintf("Optional. Agree to upload log in local file ~/%s/cli.log or not. Accept valeus: true or false", base.ConfigPath))
 
 	flags.SetFlagValues("active", "true", "false")
 	flags.SetFlagValues("agree-upload-log", "true", "false")
@@ -384,14 +385,14 @@ func NewCmdConfigAdd() *cobra.Command {
 	flags.StringVar(&cfg.Profile, "profile", "", "Required. Set name of CLI profile")
 	flags.StringVar(&cfg.PublicKey, "public-key", "", "Required. Set public key")
 	flags.StringVar(&cfg.PrivateKey, "private-key", "", "Required. Set private key")
-	flags.StringVar(&cfg.Region, "region", "", "Optional. Set default region. For instance 'cn-bj2' See 'ucloud region'")
-	flags.StringVar(&cfg.Zone, "zone", "", "Optional. Set default zone. For instance 'cn-bj2-02'. See 'ucloud region'")
-	flags.StringVar(&cfg.ProjectID, "project-id", "", "Optional. Set default project. For instance 'org-xxxxxx'. See 'ucloud project list")
-	flags.StringVar(&cfg.BaseURL, "base-url", base.DefaultBaseURL, "Optional. Set default base url. For instance 'https://api.ucloud.cn/'")
+	flags.StringVar(&cfg.Region, "region", "", fmt.Sprintf("Optional. Set default region. For instance 'cn-bj2' See '%s region'", base.BrandNameLower))
+	flags.StringVar(&cfg.Zone, "zone", "", fmt.Sprintf("Optional. Set default zone. For instance 'cn-bj2-02'. See '%s region'", base.BrandNameLower))
+	flags.StringVar(&cfg.ProjectID, "project-id", "", fmt.Sprintf("Optional. Set default project. For instance 'org-xxxxxx'. See '%s project list'", base.BrandNameLower))
+	flags.StringVar(&cfg.BaseURL, "base-url", base.DefaultBaseURL, fmt.Sprintf("Optional. Set default base url. For instance '%s'", base.BrandAPIURL))
 	flags.IntVar(&cfg.Timeout, "timeout-sec", base.DefaultTimeoutSec, "Optional. Set default timeout for requesting API. Unit: seconds")
 	cfg.MaxRetryTimes = flags.Int("max-retry-times", base.DefaultMaxRetryTimes, "Optional. Set default max-retry-times for idempotent APIs which can be called many times without side effect, for example 'ReleaseEIP'")
 	flags.StringVar(&active, "active", "false", "Optional. Mark the profile to be effective or not. Accept valeus: true or false")
-	flags.StringVar(&upload, "agree-upload-log", "false", "Optional. Agree to upload log in local file ~/.ucloud/cli.log or not. Accept valeus: true or false")
+	flags.StringVar(&upload, "agree-upload-log", "false", fmt.Sprintf("Optional. Agree to upload log in local file ~/%s/cli.log or not. Accept valeus: true or false", base.ConfigPath))
 
 	flags.SetFlagValues("active", "true", "false")
 	flags.SetFlagValues("agree-upload-log", "true", "false")
@@ -520,14 +521,14 @@ func NewCmdConfigUpdate() *cobra.Command {
 	flags.StringVar(&cfg.Profile, "profile", "", "Required. Set name of CLI profile")
 	flags.StringVar(&cfg.PublicKey, "public-key", "", "Required. Set public key")
 	flags.StringVar(&cfg.PrivateKey, "private-key", "", "Required. Set private key")
-	flags.StringVar(&cfg.Region, "region", "", "Optional. Set default region. For instance 'cn-bj2' See 'ucloud region'")
-	flags.StringVar(&cfg.Zone, "zone", "", "Optional. Set default zone. For instance 'cn-bj2-02'. See 'ucloud region'")
-	flags.StringVar(&cfg.ProjectID, "project-id", "", "Optional. Set default project. For instance 'org-xxxxxx'. See 'ucloud project list")
-	flags.StringVar(&cfg.BaseURL, "base-url", "", "Optional. Set default base url. For instance 'https://api.ucloud.cn/'")
+	flags.StringVar(&cfg.Region, "region", "", fmt.Sprintf("Optional. Set default region. For instance 'cn-bj2' See '%s region'", base.BrandNameLower))
+	flags.StringVar(&cfg.Zone, "zone", "", fmt.Sprintf("Optional. Set default zone. For instance 'cn-bj2-02'. See '%s region'", base.BrandNameLower))
+	flags.StringVar(&cfg.ProjectID, "project-id", "", fmt.Sprintf("Optional. Set default project. For instance 'org-xxxxxx'. See '%s project list'", base.BrandNameLower))
+	flags.StringVar(&cfg.BaseURL, "base-url", "", fmt.Sprintf("Optional. Set default base url. For instance '%s'", base.BrandAPIURL))
 	flags.StringVar(&timeout, "timeout-sec", "", "Optional. Set default timeout for requesting API. Unit: seconds")
 	flags.StringVar(&maxRetries, "max-retry-times", "", "Optional. Set default max retry times for idempotent APIs which can be called many times without side effect, for example 'ReleaseEIP'")
 	flags.StringVar(&active, "active", "", "Optional. Mark the profile to be effective")
-	flags.StringVar(&upload, "agree-upload-log", "", "Optional. Agree to upload log in local file ~/.ucloud/cli.log or not. Accept valeus: true or false")
+	flags.StringVar(&upload, "agree-upload-log", "", fmt.Sprintf("Optional. Agree to upload log in local file ~/%s/cli.log or not. Accept valeus: true or false", base.ConfigPath))
 
 	flags.SetFlagValuesFunc("profile", func() []string { return base.AggConfigListIns.GetProfileNameList() })
 	flags.SetFlagValuesFunc("region", getRegionList)
@@ -563,7 +564,7 @@ func NewCmdConfigDelete() *cobra.Command {
 		Use:     "delete",
 		Short:   "delete configurations by profile name",
 		Long:    "delete configurations by profile name",
-		Example: "ucloud config delete --profile test",
+		Example: fmt.Sprintf("%s config delete --profile test", base.BrandNameLower),
 		Run: func(c *cobra.Command, args []string) {
 			profiles := base.AggConfigListIns.GetProfileNameList()
 			allProfileMap := make(map[string]bool)

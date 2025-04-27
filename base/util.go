@@ -27,7 +27,7 @@ import (
 )
 
 // ConfigPath 配置文件路径
-const ConfigPath = ".ucloud"
+var ConfigPath = fmt.Sprintf(".%s", BrandNameLower)
 
 // GAP 表格列直接的间隔字符数
 const GAP = 2

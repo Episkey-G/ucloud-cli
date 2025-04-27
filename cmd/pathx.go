@@ -61,7 +61,7 @@ func NewCmdUGA3Create(out io.Writer) *cobra.Command {
 		Use:   "create",
 		Short: "Create the pathx resource and port",
 		Long:  "Create global unified access acceleration configuration item",
-		Example: "ucloud pathx create --bandwidth 10 --area-code DXB" +
+		Example: fmt.Sprintf("%s pathx create --bandwidth 10 --area-code DXB", base.BrandNameLower) +
 			"--charge-type Month --quantity 4 --accel Global --origin-ip 110.111.111.111" +
 			"--protocol TCP --port 30654 --origin-port 30564",
 		Run: func(cmd *cobra.Command, args []string) {
@@ -221,7 +221,7 @@ func NewCmdUGA3Delete(out io.Writer) *cobra.Command {
 		Use:     "delete",
 		Short:   "Delete the pathx resource and port",
 		Long:    "Delete the pathx resource and port",
-		Example: "ucloud pathx delete --id uga3-xxx",
+		Example: fmt.Sprintf("%s pathx delete --id uga3-xxx", base.BrandNameLower),
 		Run: func(cmd *cobra.Command, args []string) {
 			if !*yes {
 				sure, err := ux.Prompt("Are you sure you want to delete this resource ?")
@@ -305,7 +305,7 @@ func NewCmdUGA3Modify(out io.Writer) *cobra.Command {
 		Use:     "modify",
 		Short:   "Modify the pathx associated information. Example bandwidth or origin information or resource information",
 		Long:    "Support modify bandwidth,origin information,resource information,port",
-		Example: "ucloud pathx modify --id uga3-xxx --bandwidth 1 --origin-ip 127.0.0.1 --name Pathx测试 --remark 加速资源 --protocol TCP --port 30010 --origin-port 39999",
+		Example: fmt.Sprintf("%s pathx modify --id uga3-xxx --bandwidth 1 --origin-ip 127.0.0.1 --name Pathx测试 --remark 加速资源 --protocol TCP --port 30010 --origin-port 39999", base.BrandNameLower),
 		Run: func(cmd *cobra.Command, args []string) {
 			modifyBandwidthReq.InstanceId = &instanceId
 			modifyInstanceReq.InstanceId = &instanceId
@@ -459,7 +459,7 @@ func NewCmdUGA3List(out io.Writer) *cobra.Command {
 		Use:     "list",
 		Short:   "List all the pathx resource of project",
 		Long:    "List all the pathx resource of project",
-		Example: "'ucloud pathx list or ucloud pathx list --id uga-xxx or ucloud pathx list --id uga-xxx --detail",
+		Example: fmt.Sprintf("'%s pathx list or %s pathx list --id uga-xxx or %s pathx list --id uga-xxx --detail", base.BrandNameLower, base.BrandNameLower, base.BrandNameLower),
 		Run: func(cmd *cobra.Command, args []string) {
 			if len(instanceId) > 0 {
 				getPathxListReq.InstanceId = &instanceId
@@ -612,7 +612,7 @@ func NewPathxPriceList(out io.Writer) *cobra.Command {
 		Use:     "list",
 		Short:   "List all the pathx acceleration area price",
 		Long:    "List all the pathx acceleration area price",
-		Example: "ucloud pathx price list --bandwidth 10 --area-code BKK --charge-type Month",
+		Example: fmt.Sprintf("%s pathx price list --bandwidth 10 --area-code BKK --charge-type Month", base.BrandNameLower),
 		Run: func(cmd *cobra.Command, args []string) {
 			if strings.EqualFold(*priceReq.ChargeType, "Month") {
 				*priceReq.Quantity = 0
@@ -702,7 +702,7 @@ func NewCmdPathxAreaList(out io.Writer) *cobra.Command {
 		Use:     "list",
 		Short:   "List origin area or acceleration area information",
 		Long:    "Provide optional flags to get the optional list of global access source stations",
-		Example: "ucloud pathx area list --origin-ip 0.0.0.0 --origin-domain test.com",
+		Example: fmt.Sprintf("%s pathx area list --origin-ip 0.0.0.0 --origin-domain test.com", base.BrandNameLower),
 		Run: func(cmd *cobra.Command, args []string) {
 			if len(originDomain) == 0 && len(originIp) == 0 {
 				response, err := base.BizClient.DescribeUGA3Area(areaGetReq)
@@ -1184,7 +1184,7 @@ func NewCmdUGACreate(out io.Writer) *cobra.Command {
 		Use:     "create",
 		Short:   "Create uga instance",
 		Long:    "Create uga instance",
-		Example: "ucloud pathx uga create --name testcli1 --protocol tcp --origin-location 中国 --origin-domain lixiaojun.xyz --upath-id upath-auvfexxx/test_0 --port 80-90,100,110-115",
+		Example: fmt.Sprintf("%s pathx uga create --name testcli1 --protocol tcp --origin-location 中国 --origin-domain lixiaojun.xyz --upath-id upath-auvfexxx/test_0 --port 80-90,100,110-115", base.BrandNameLower),
 		Run: func(c *cobra.Command, args []string) {
 			if *req.IPList == "" && *req.Domain == "" {
 				fmt.Fprintln(out, "origin-ip and origin-domain can not be both empty")
@@ -1213,7 +1213,7 @@ func NewCmdUGACreate(out io.Writer) *cobra.Command {
 			resp, err := base.BizClient.PrivatePathxClient.CreateUGAInstance(req)
 			if err != nil {
 				if uErr, ok := err.(uerr.Error); ok && uErr.Code() == 33756 {
-					fmt.Fprintf(out, "The number of ports added exceeds the limit(50). We recommend that you could reduce the number of ports, then create an uga instance, \nand then add the remaining ports by executing 'ucloud pathx uga add-port --protocol %s --uga-id <uga-id> --port <PortList>'\n", protocol)
+					fmt.Fprintf(out, "The number of ports added exceeds the limit(50). We recommend that you could reduce the number of ports, then create an uga instance, \nand then add the remaining ports by executing '%s pathx uga add-port --protocol %s --uga-id <uga-id> --port <PortList>'\n", base.BrandNameLower, protocol)
 				}
 				return
 			}
@@ -1246,7 +1246,7 @@ func NewCmdUGACreate(out io.Writer) *cobra.Command {
 	req.Location = flags.String("origin-location", "", "Required. Location of origin ip or domain. accpet valeus:'中国','洛杉矶','法兰克福','中国香港','雅加达','孟买','东京','莫斯科','新加坡','曼谷','中国台北','华盛顿','首尔'")
 	flags.StringVar(&protocol, "protocol", "", fmt.Sprintf("Required. accept values: %s", strings.Join(protocols, ",")))
 	flags.StringSliceVar(&ports, "port", nil, "Required. Single port or port range, separated by ',', for example 80,3000-3010")
-	flags.StringSliceVar(&lines, "upath-id", nil, "Required. Accelerated path to bind with the uga instance to create. multiple upath-id separated by ','; see 'ucloud pathx upath list")
+	flags.StringSliceVar(&lines, "upath-id", nil, fmt.Sprintf("Required. Accelerated path to bind with the uga instance to create. multiple upath-id separated by ','; see '%s pathx upath list", base.BrandNameLower))
 
 	cmd.MarkFlagRequired("name")
 	cmd.MarkFlagRequired("origin-location")

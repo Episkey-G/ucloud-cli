@@ -491,13 +491,13 @@ func NewCmdUHostCreate() *cobra.Command {
 	req.CPU = flags.Int("cpu", 4, "Required. The count of CPU cores. Optional parameters: {1, 2, 4, 8, 12, 16, 24, 32, 64}")
 	req.Memory = flags.Int("memory-gb", 8, "Required. Memory size. Unit: GB. Range: [1, 512], multiple of 2")
 	flags.StringVar(&password, "password", "", "Optional. Password of the uhost user(root/ubuntu)")
-	flags.StringVar(&keyPairId, "key-pair-id", "", "Optional. Resource ID of ssh key pair. See 'ucloud api --Action DescribeUHostKeyPairs' Where both password and key-pair-id are set, the key-pair-id is ignored")
-	req.ImageId = flags.String("image-id", "", "Required. The ID of image. see 'ucloud image list'")
+	flags.StringVar(&keyPairId, "key-pair-id", "", fmt.Sprintf("Optional. Resource ID of ssh key pair. See '%s api --Action DescribeUHostKeyPairs' Where both password and key-pair-id are set, the key-pair-id is ignored", base.BrandNameLower))
+	req.ImageId = flags.String("image-id", "", fmt.Sprintf("Required. The ID of image. see '%s image list'", base.BrandNameLower))
 	flags.BoolVar(&async, "async", false, "Optional. Do not wait for the long-running operation to finish.")
 	flags.IntVar(&count, "count", 1, "Optional. Number of uhost to create.")
 	flags.IntVar(&concurrent, "concurrent", 20, "Optional. The count of concurrent uhost creation requests.")
-	req.VPCId = flags.String("vpc-id", "", "Optional. VPC ID. This field is required under VPC2.0. See 'ucloud vpc list'")
-	req.SubnetId = flags.String("subnet-id", "", "Optional. Subnet ID. This field is required under VPC2.0. See 'ucloud subnet list'")
+	req.VPCId = flags.String("vpc-id", "", fmt.Sprintf("Optional. VPC ID. This field is required under VPC2.0. See '%s vpc list'", base.BrandNameLower))
+	req.SubnetId = flags.String("subnet-id", "", fmt.Sprintf("Optional. Subnet ID. This field is required under VPC2.0. See '%s subnet list'", base.BrandNameLower))
 	req.Name = flags.String("name", "UHost", "Optional. UHost instance name")
 	flags.StringSliceVar(&bindEipIDs, "bind-eip", nil, "Optional. Resource ID or IP Address of eip that will be bound to the new created uhost")
 	eipReq.OperatorName = flags.String("create-eip-line", "", "Optional. BGP for regions in the chinese mainland and International for overseas regions")
@@ -513,25 +513,28 @@ func NewCmdUHostCreate() *cobra.Command {
 	bindRegion(req, flags)
 	bindZone(req, flags)
 
-	req.MachineType = flags.String("machine-type", "N", "Optional. Accept values: N, C, G, O, OS. Forward to https://docs.ucloud.cn/api/uhost-api/uhost_type for details")
+	docURL := fmt.Sprintf("%s", base.BrandUhostTypeURL)
+
+	req.MachineType = flags.String("machine-type", "N", fmt.Sprintf("Optional. Accept values: N, C, G, O, OS. Forward to %s for details", docURL))
 	req.MinimalCpuPlatform = flags.String("minimal-cpu-platform", "", "Optional. Accept values: Intel/Auto, Intel/IvyBridge, Intel/Haswell, Intel/Broadwell, Intel/Skylake, Intel/Cascadelake")
-	req.UHostType = flags.String("type", "", "Optional. Accept values: N1, N2, N3, G1, G2, G3, I1, I2, C1. Forward to https://docs.ucloud.cn/api/uhost-api/uhost_type for details")
+	req.UHostType = flags.String("type", "", fmt.Sprintf("Optional. Accept values: N1, N2, N3, G1, G2, G3, I1, I2, C1. Forward to %s for details", docURL))
 	req.GPU = flags.Int("gpu", 0, "Optional. The count of GPU cores.")
+	req.GpuType = flags.String("gpu-type", "", fmt.Sprintf("Optional. The type of GPU instance. Required if defined the `machine-type` as 'G'. Accept values: 'K80', 'P40', 'V100'. Forward to %s for details.", docURL))
 	req.NetCapability = flags.String("net-capability", "Normal", "Optional. Accept values: Normal, Super and Ultra. 'Normal' will disable network enhancement. 'Super' will enable network enhancement 1.0. 'Ultra' will enable network enhancement 2.0")
 	flags.StringVar(&hotPlug, "hot-plug", "true", "Optional. Enable hot plug feature or not. Accept values: true or false")
 	req.Disks[0].Type = flags.String("os-disk-type", "CLOUD_SSD", "Optional. Enumeration value. 'LOCAL_NORMAL', Ordinary local disk; 'CLOUD_NORMAL', Ordinary cloud disk; 'LOCAL_SSD',local ssd disk; 'CLOUD_SSD',cloud ssd disk; 'EXCLUSIVE_LOCAL_DISK',big data. The disk only supports a limited combination.")
 	req.Disks[0].Size = flags.Int("os-disk-size-gb", 20, "Optional. Default 20G. Windows should be bigger than 40G Unit GB")
 	req.Disks[0].BackupType = flags.String("os-disk-backup-type", "NONE", "Optional. Enumeration value, 'NONE' or 'DATAARK'. DataArk supports real-time backup, which can restore the disk back to any moment within the last 12 hours. (Normal Local Disk and Normal Cloud Disk Only)")
-	req.Disks[1].Type = flags.String("data-disk-type", "CLOUD_SSD", "Optional. Accept values: 'LOCAL_NORMAL','LOCAL_SSD','CLOUD_NORMAL',CLOUD_SSD','CLOUD_RSSD','EXCLUSIVE_LOCAL_DISK' and 'NONE'. 'LOCAL_NORMAL', Ordinary local disk; 'CLOUD_NORMAL', Ordinary cloud disk; 'LOCAL_SSD',local ssd disk; 'CLOUD_SSD',cloud ssd disk; 'CLOUD_RSSD', coud rssd disk; 'EXCLUSIVE_LOCAL_DISK',big data. The disk only supports a limited combination. 'NONE', create uhost without data disk. More details https://docs.ucloud.cn/api/uhost-api/disk_type")
+	req.Disks[1].Type = flags.String("data-disk-type", "CLOUD_SSD", fmt.Sprintf("Optional. Accept values: 'LOCAL_NORMAL','LOCAL_SSD','CLOUD_NORMAL',CLOUD_SSD','CLOUD_RSSD','EXCLUSIVE_LOCAL_DISK' and 'NONE'. 'LOCAL_NORMAL', Ordinary local disk; 'CLOUD_NORMAL', Ordinary cloud disk; 'LOCAL_SSD',local ssd disk; 'CLOUD_SSD',cloud ssd disk; 'CLOUD_RSSD', coud rssd disk; 'EXCLUSIVE_LOCAL_DISK',big data. The disk only supports a limited combination. 'NONE', create uhost without data disk. More details %s", base.BrandDiskTypeURL))
 	req.Disks[1].Size = flags.Int("data-disk-size-gb", 20, "Optional. Disk size. Unit GB")
 	req.Disks[1].BackupType = flags.String("data-disk-backup-type", "NONE", "Optional. Enumeration value, 'NONE' or 'DATAARK'. DataArk supports real-time backup, which can restore the disk back to any moment within the last 12 hours. (Normal Local Disk and Normal Cloud Disk Only)")
-	flags.StringVar(&firewallId, "firewall-id", "", "Optional. Firewall Id, default: Web recommended firewall. see 'ucloud firewall list'.")
+	flags.StringVar(&firewallId, "firewall-id", "", fmt.Sprintf("Optional. Firewall Id, default: Web recommended firewall. see '%s firewall list'.", base.BrandNameLower))
 	flags.StringSliceVar(&secGroupIds, "security-group-id", nil, "Optional. Security Group Id. Before using security group function, please confirm the account has such permission. When both firewall-id and security-group-id are set, the security-group-id will be ignored")
 	req.Tag = flags.String("group", "Default", "Optional. Business group")
-	req.IsolationGroup = flags.String("isolation-group", "", "Optional. Resource ID of isolation group. see 'ucloud uhost isolation-group list")
-	req.GpuType = flags.String("gpu-type", "", "Optional. The type of GPU instance. Required if defined the `machine-type` as 'G'. Accept values: 'K80', 'P40', 'V100'. Forward to https://docs.ucloud.cn/api/uhost-api/uhost_type for details.")
-	flags.StringVar(&userData, "user-data", "", "Optional. Conflicts with `user-data-base64`. ConCustomize the startup behaviors when launching the instance. Forward to https://docs.ucloud.cn/uhost/guide/metadata/userdata for details.")
-	flags.StringVar(&userDataBase64, "user-data-base64", "", "Optional. Conflicts with `user-data`. Customize the startup behaviors when launching the instance. The value must be base64-encode. Forward to https://docs.ucloud.cn/uhost/guide/metadata/userdata for details.")
+	req.IsolationGroup = flags.String("isolation-group", "", fmt.Sprintf("Optional. Resource ID of isolation group. see '%s uhost isolation-group list'", base.BrandNameLower))
+	userDataDocURL := fmt.Sprintf("%s", base.BrandUserDataURL)
+	flags.StringVar(&userData, "user-data", "", fmt.Sprintf("Optional. Conflicts with `user-data-base64`. Customize the startup behaviors when launching the instance. Forward to %s for details.", userDataDocURL))
+	flags.StringVar(&userDataBase64, "user-data-base64", "", fmt.Sprintf("Optional. Conflicts with `user-data`. Customize the startup behaviors when launching the instance. The value must be base64-encode. Forward to %s for details.", userDataDocURL))
 
 	flags.MarkDeprecated("type", "please use --machine-type instead")
 	flags.SetFlagValues("charge-type", "Month", "Year", "Dynamic", "Trial")
@@ -918,7 +921,7 @@ func NewCmdUHostStop(out io.Writer) *cobra.Command {
 		Use:     "stop",
 		Short:   "Shut down uhost instance",
 		Long:    "Shut down uhost instance",
-		Example: "ucloud uhost stop --uhost-id uhost-xxx1,uhost-xxx2",
+		Example: fmt.Sprintf("%s uhost stop --uhost-id uhost-xxx1,uhost-xxx2", base.BrandNameLower),
 		Run: func(cmd *cobra.Command, args []string) {
 			for _, id := range *uhostIDs {
 				id = base.PickResourceID(id)
@@ -996,7 +999,7 @@ func NewCmdUHostStart(out io.Writer) *cobra.Command {
 		Use:     "start",
 		Short:   "Start Uhost instance",
 		Long:    "Start Uhost instance",
-		Example: "ucloud uhost start --uhost-id uhost-xxx1,uhost-xxx2",
+		Example: fmt.Sprintf("%s uhost start --uhost-id uhost-xxx1,uhost-xxx2", base.BrandNameLower),
 		Run: func(cmd *cobra.Command, args []string) {
 			for _, id := range *uhostIDs {
 				id := base.PickResourceID(id)
@@ -1038,7 +1041,7 @@ func NewCmdUHostReboot(out io.Writer) *cobra.Command {
 		Use:     "restart",
 		Short:   "Restart uhost instance",
 		Long:    "Restart uhost instance",
-		Example: "ucloud uhost restart --uhost-id uhost-xxx1,uhost-xxx2",
+		Example: fmt.Sprintf("%s uhost restart --uhost-id uhost-xxx1,uhost-xxx2", base.BrandNameLower),
 		Run: func(cmd *cobra.Command, args []string) {
 			for _, id := range *uhostIDs {
 				id = base.PickResourceID(id)
@@ -1081,7 +1084,7 @@ func NewCmdUHostPoweroff(out io.Writer) *cobra.Command {
 		Use:     "poweroff",
 		Short:   "Analog power off Uhost instnace",
 		Long:    "Analog power off Uhost instnace",
-		Example: "ucloud uhost poweroff --uhost-id uhost-xxx1,uhost-xxx2",
+		Example: fmt.Sprintf("%s uhost poweroff --uhost-id uhost-xxx1,uhost-xxx2", base.BrandNameLower),
 		Run: func(cmd *cobra.Command, args []string) {
 			if !*yes {
 				confirmText := "Danger, it may affect data integrity. Are you sure you want to poweroff this uhost?"
@@ -1172,7 +1175,7 @@ func NewCmdUHostResize(out io.Writer) *cobra.Command {
 		Use:     "resize",
 		Short:   "Resize uhost instance,such as cpu core count, memory size and disk size",
 		Long:    "Resize uhost instance,such as cpu core count, memory size and disk size",
-		Example: "ucloud uhost resize --uhost-id uhost-xxx1,uhost-xxx2 --cpu 4 --memory-gb 8",
+		Example: fmt.Sprintf("%s uhost resize --uhost-id uhost-xxx1,uhost-xxx2 --cpu 4 --memory-gb 8", base.BrandNameLower),
 		Run: func(cmd *cobra.Command, args []string) {
 			if *req.CPU == 0 {
 				req.CPU = nil
@@ -1473,7 +1476,7 @@ func NewCmdUHostClone(out io.Writer) *cobra.Command {
 	flags.SortFlags = false
 	uhostID = flags.String("uhost-id", "", "Required. Resource ID of the uhost to clone from")
 	flags.StringVar(&password, "password", "", "Optional. Password of the uhost user(root/ubuntu)")
-	flags.StringVar(&keyPairId, "key-pair-id", "", "Optional. Resource ID of ssh key pair. See 'ucloud api --Action DescribeUHostKeyPairs' Where both password and key-pair-id are set, the key-pair-id is ignored")
+	flags.StringVar(&keyPairId, "key-pair-id", "", fmt.Sprintf("Optional. Resource ID of ssh key pair. See '%s api --Action DescribeUHostKeyPairs' Where both password and key-pair-id are set, the key-pair-id is ignored", base.BrandNameLower))
 
 	req.Name = flags.String("name", "", "Optional. Name of the uhost to clone")
 	req.ProjectId = flags.String("project-id", base.ConfigIns.ProjectID, "Optional. Assign project-id")
@@ -1703,8 +1706,8 @@ func NewCmdUhostReinstallOS(out io.Writer) *cobra.Command {
 	flags.SortFlags = false
 	req.UHostId = flags.String("uhost-id", "", "Required. Resource ID of the uhost to reinstall operating system")
 	flags.StringVar(&password, "password", "", "Optional. Password of the uhost user(root/ubuntu)")
-	flags.StringVar(&keyPairId, "key-pair-id", "", "Optional. Resource ID of ssh key pair. See 'ucloud api --Action DescribeUHostKeyPairs' Where both password and key-pair-id are set, the key-pair-id is ignored")
-	req.ImageId = flags.String("image-id", "", "Optional. Resource ID the image to install. See 'ucloud image list'. Default is original image of the uhost")
+	flags.StringVar(&keyPairId, "key-pair-id", "", fmt.Sprintf("Optional. Resource ID of ssh key pair. See '%s api --Action DescribeUHostKeyPairs' Where both password and key-pair-id are set, the key-pair-id is ignored", base.BrandNameLower))
+	req.ImageId = flags.String("image-id", "", fmt.Sprintf("Optional. Resource ID the image to install. See '%s image list'. Default is original image of the uhost", base.BrandNameLower))
 	req.ProjectId = flags.String("project-id", base.ConfigIns.ProjectID, "Optional. Assign project-id")
 	req.Region = flags.String("region", base.ConfigIns.Region, "Optional. Assign region")
 	req.Zone = flags.String("zone", base.ConfigIns.Zone, "Optional. Assign availability zone")

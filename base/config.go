@@ -33,7 +33,7 @@ const DefaultTimeoutSec = 15
 const DefaultMaxRetryTimes = 3
 
 // DefaultBaseURL location of api server
-const DefaultBaseURL = "https://api.ucloud.cn/"
+var DefaultBaseURL string
 
 // DefaultProfile name of default profile
 const DefaultProfile = "default"
@@ -41,7 +41,7 @@ const DefaultProfile = "default"
 // Version 版本号
 const Version = "0.3.0"
 
-var UserAgent = fmt.Sprintf("UCloud-CLI/%s", Version)
+var UserAgent = fmt.Sprintf("%s-CLI/%s", BrandName, Version)
 
 var InCloudShell = os.Getenv("CLOUD_SHELL") == "true"
 
@@ -166,7 +166,7 @@ func (p *AggConfig) ConfigBaseURL() error {
 // ConfigUploadLog agree upload log or not
 func (p *AggConfig) ConfigUploadLog() error {
 	var input string
-	fmt.Print("Do you agree to upload log in local file ~/.ucloud/cli.log to help ucloud-cli get better(yes|no):")
+	fmt.Printf("Do you agree to upload log in local file ~/%s/cli.log to help %s-cli get better(yes|no):", ConfigPath, BrandNameLower)
 	_, err := fmt.Scanf("%s\n", &input)
 	if err != nil {
 		HandleError(err)
@@ -342,10 +342,10 @@ func (p *AggConfigManager) Load() error {
 	}
 
 	if p.activeProfile == "" && len(configMap) > 0 {
-		return fmt.Errorf("no active config found, run 'ucloud config list' to check")
+		return fmt.Errorf("no active config found, run '%s config list' to check", BrandNameLower)
 	}
 	if _, ok := credMap[p.activeProfile]; p.activeProfile != "" && !ok {
-		return fmt.Errorf("profile %s's credential don't exist, run 'ucloud config list' to check", p.activeProfile)
+		return fmt.Errorf("profile %s's credential don't exist, run '%s config list' to check", p.activeProfile, BrandNameLower)
 	}
 
 	return nil
@@ -544,7 +544,7 @@ func (p *AggConfigManager) GetActiveAggConfig() (*AggConfig, error) {
 	if ac, ok := p.configs[p.activeProfile]; ok {
 		return ac, nil
 	}
-	return nil, fmt.Errorf("active profile not found. see 'ucloud config list'")
+	return nil, fmt.Errorf("active profile not found. see '%s config list'", BrandNameLower)
 }
 
 // GetActiveAggConfigName get active config name
@@ -847,6 +847,7 @@ func mergeConfigIns(ins *AggConfig) {
 }
 
 func init() {
+	DefaultBaseURL = fmt.Sprintf("%s", BrandAPIURL)
 	//配置日志
 	err := initLog()
 	if err != nil {

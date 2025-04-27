@@ -8,6 +8,7 @@ import (
 
 	"github.com/fatih/color"
 	"github.com/spf13/cobra"
+	"github.com/ucloud/ucloud-cli/base"
 	"github.com/ucloud/ucloud-sdk-go/ucloud/auth"
 )
 
@@ -19,8 +20,8 @@ func NewCmdSignature() *cobra.Command {
 	)
 	cmd := &cobra.Command{
 		Use:   "signature",
-		Short: "Calculate ucloud signature",
-		Long:  "Calculate ucloud signature",
+		Short: fmt.Sprintf("Calculate %s signature", base.BrandNameLower),
+		Long:  fmt.Sprintf("Calculate %s signature", base.BrandNameLower),
 
 		Aliases: []string{"sign"},
 

@@ -1,14 +1,15 @@
 package base
 
 import (
+	"fmt"
 	"io/ioutil"
 	"os"
 	"testing"
 )
 
 const cliConfigJSON = `[
-	{"project_id":"org-bdks4e","region":"cn-bj2","zone":"cn-bj2-04","base_url":"https://api.ucloud.cn/","timeout_sec":15,"profile":"uweb","active":true},
-	{"project_id":"org-oxjwoi","region":"hk","zone":"hk-02","base_url":"https://api.ucloud.cn/","timeout_sec":15,"profile":"test","active":false}
+	{"project_id":"org-bdks4e","region":"cn-bj2","zone":"cn-bj2-04","base_url":"%s","timeout_sec":15,"profile":"uweb","active":true},
+	{"project_id":"org-oxjwoi","region":"hk","zone":"hk-02","base_url":"%s","timeout_sec":15,"profile":"test","active":false}
 ]`
 
 const credentialJSON = `[
@@ -17,28 +18,30 @@ const credentialJSON = `[
 ]`
 
 func TestAggConfigManager(t *testing.T) {
-	os.MkdirAll(".ucloud", 0700)
-	err := ioutil.WriteFile(".ucloud/config.json", []byte(cliConfigJSON), LocalFileMode)
+	os.MkdirAll(ConfigPath, 0700)
+	baseURL := fmt.Sprintf("%s", BrandAPIURL)
+	configJSON := fmt.Sprintf(cliConfigJSON, baseURL, baseURL)
+	err := ioutil.WriteFile(ConfigPath+"/config.json", []byte(configJSON), LocalFileMode)
 	if err != nil {
 		t.Error(err)
 	}
-	err = ioutil.WriteFile(".ucloud/credential.json", []byte(credentialJSON), LocalFileMode)
+	err = ioutil.WriteFile(ConfigPath+"/credential.json", []byte(credentialJSON), LocalFileMode)
 	if err != nil {
 		t.Error(err)
 	}
 	defer func() {
-		err := os.RemoveAll(".ucloud")
+		err := os.RemoveAll(ConfigPath)
 		if err != nil {
 			t.Error(err)
 		}
 	}()
 
-	configFile, err := os.OpenFile(".ucloud/config.json", os.O_CREATE|os.O_RDONLY, LocalFileMode)
+	configFile, err := os.OpenFile(ConfigPath+"/config.json", os.O_CREATE|os.O_RDONLY, LocalFileMode)
 	if err != nil {
 		t.Error(err)
 	}
 
-	credFile, err := os.OpenFile(".ucloud/credential.json", os.O_CREATE|os.O_RDONLY, LocalFileMode)
+	credFile, err := os.OpenFile(ConfigPath+"/credential.json", os.O_CREATE|os.O_RDONLY, LocalFileMode)
 	if err != nil {
 		t.Error(err)
 	}
@@ -55,20 +58,20 @@ func TestAggConfigManager(t *testing.T) {
 }
 
 func TestEmptyAggConfigManager(t *testing.T) {
-	os.MkdirAll(".ucloud", 0700)
+	os.MkdirAll(ConfigPath, 0700)
 	defer func() {
-		err := os.RemoveAll(".ucloud")
+		err := os.RemoveAll(ConfigPath)
 		if err != nil {
 			t.Error(err)
 		}
 	}()
 
-	configFile, err := os.OpenFile(".ucloud/config.json", os.O_CREATE|os.O_RDONLY, LocalFileMode)
+	configFile, err := os.OpenFile(ConfigPath+"/config.json", os.O_CREATE|os.O_RDONLY, LocalFileMode)
 	if err != nil {
 		t.Error(err)
 	}
 
-	credFile, err := os.OpenFile(".ucloud/credential.json", os.O_CREATE|os.O_RDONLY, LocalFileMode)
+	credFile, err := os.OpenFile(ConfigPath+"/credential.json", os.O_CREATE|os.O_RDONLY, LocalFileMode)
 	if err != nil {
 		t.Error(err)
 	}
