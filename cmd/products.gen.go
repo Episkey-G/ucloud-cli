@@ -5,6 +5,7 @@ import (
 	"github.com/ucloud/ucloud-cli/pkg/cli"
 	"github.com/ucloud/ucloud-cli/products/eip"
 	"github.com/ucloud/ucloud-cli/products/firewall"
+	"github.com/ucloud/ucloud-cli/products/image"
 	"github.com/ucloud/ucloud-cli/products/udb"
 	"github.com/ucloud/ucloud-cli/products/udisk"
 	"github.com/ucloud/ucloud-cli/products/uphost"
@@ -15,6 +16,7 @@ func registeredProducts() []cli.Product {
 	return []cli.Product{
 		eip.New(),
 		firewall.New(),
+		image.New(),
 		udb.New(),
 		udisk.New(),
 		uphost.New(),
