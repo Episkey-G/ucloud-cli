@@ -36,24 +36,28 @@ func TestDefaultRegionProjectIDGetters(t *testing.T) {
 		name          string
 		config        *base.AggConfig
 		wantRegion    string
+		wantZone      string
 		wantProjectID string
 	}{
 		{
 			name:          "nil config is nil-safe",
 			config:        nil,
 			wantRegion:    "",
+			wantZone:      "",
 			wantProjectID: "",
 		},
 		{
 			name:          "empty config returns empty",
 			config:        &base.AggConfig{},
 			wantRegion:    "",
+			wantZone:      "",
 			wantProjectID: "",
 		},
 		{
 			name:          "populated config returns configured values",
-			config:        &base.AggConfig{Region: "cn-bj2", ProjectID: "org-x"},
+			config:        &base.AggConfig{Region: "cn-bj2", Zone: "cn-bj2-04", ProjectID: "org-x"},
 			wantRegion:    "cn-bj2",
+			wantZone:      "cn-bj2-04",
 			wantProjectID: "org-x",
 		},
 	}
@@ -63,6 +67,9 @@ func TestDefaultRegionProjectIDGetters(t *testing.T) {
 			ctx := cli.NewContext(cli.Deps{Config: tt.config})
 			if got := ctx.DefaultRegion(); got != tt.wantRegion {
 				t.Errorf("DefaultRegion() = %q, want %q", got, tt.wantRegion)
+			}
+			if got := ctx.DefaultZone(); got != tt.wantZone {
+				t.Errorf("DefaultZone() = %q, want %q", got, tt.wantZone)
 			}
 			if got := ctx.DefaultProjectID(); got != tt.wantProjectID {
 				t.Errorf("DefaultProjectID() = %q, want %q", got, tt.wantProjectID)

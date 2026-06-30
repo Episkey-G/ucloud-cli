@@ -113,6 +113,16 @@ func (c *Context) DefaultProjectID() string {
 	return c.config.ProjectID
 }
 
+// DefaultZone returns the per-invocation default availability zone from config,
+// for hand-written --zone flags that must NOT register zone completion (same
+// rationale as DefaultRegion/DefaultProjectID). Nil-safe: empty when no config.
+func (c *Context) DefaultZone() string {
+	if c.config == nil {
+		return ""
+	}
+	return c.config.Zone
+}
+
 // AllRegions returns every region the account can see, propagating the
 // fetch error (unlike RegionList, which is for completion and drops it). Used
 // by runtime fan-out flags such as uhost --all-region. Nil-safe.
