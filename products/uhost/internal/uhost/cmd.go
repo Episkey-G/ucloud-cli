@@ -35,7 +35,8 @@ func NewCommand(ctx *cli.Context) *cobra.Command {
 		Args:  cobra.NoArgs,
 	}
 	cmd.AddCommand(newList(ctx))
-	// create + delete are wired in create.go (6c); added to this tree there.
+	cmd.AddCommand(newCreate(ctx))
+	cmd.AddCommand(newDelete(ctx))
 	cmd.AddCommand(newStop(ctx))
 	cmd.AddCommand(newStart(ctx))
 	cmd.AddCommand(newReboot(ctx))
