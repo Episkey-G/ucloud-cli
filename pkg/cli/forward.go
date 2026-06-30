@@ -93,6 +93,26 @@ func (c *Context) ProjectList() []string {
 	return c.projectList()
 }
 
+// DefaultRegion / DefaultProjectID expose the per-invocation config defaults
+// (the same values Bind* helpers use) for hand-written flags where the standard
+// Bind* helpers don't apply — e.g. a product command that needs the configured
+// default region/project as a flag default but must NOT register region/project
+// completion (mirrors the RegionList rationale). Nil-safe: empty when no config.
+func (c *Context) DefaultRegion() string {
+	if c.config == nil {
+		return ""
+	}
+	return c.config.Region
+}
+
+// DefaultProjectID returns the per-invocation default project id from config.
+func (c *Context) DefaultProjectID() string {
+	if c.config == nil {
+		return ""
+	}
+	return c.config.ProjectID
+}
+
 // AllRegions returns every region the account can see, propagating the
 // fetch error (unlike RegionList, which is for completion and drops it). Used
 // by runtime fan-out flags such as uhost --all-region. Nil-safe.

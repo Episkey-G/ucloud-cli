@@ -165,7 +165,6 @@ func addPlatformCommands(root *cobra.Command) {
 	root.AddCommand(NewCmdUImage())
 	root.AddCommand(NewCmdSubnet())
 	root.AddCommand(NewCmdVpc())
-	root.AddCommand(NewCmdFirewall())
 	root.AddCommand(NewCmdDisk())
 	root.AddCommand(NewCmdEIP())
 	root.AddCommand(NewCmdBandwidth())

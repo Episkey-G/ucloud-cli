@@ -240,7 +240,6 @@ var reservedCommands = map[string]bool{
 	"uimage":    true, // NewCmdUImage
 	"subnet":    true, // NewCmdSubnet
 	"vpc":       true, // NewCmdVpc
-	"firewall":  true, // NewCmdFirewall
 	"udisk":     true, // NewCmdDisk
 	"eip":       true, // NewCmdEIP
 	"bandwidth": true, // NewCmdBandwidth
