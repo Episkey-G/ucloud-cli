@@ -237,7 +237,6 @@ var reservedCommands = map[string]bool{
 	"region":    true, // NewCmdRegion
 	"project":   true, // NewCmdProject
 	"uhost":     true, // NewCmdUHost
-	"uphost":    true, // NewCmdUPHost
 	"uimage":    true, // NewCmdUImage
 	"subnet":    true, // NewCmdSubnet
 	"vpc":       true, // NewCmdVpc
