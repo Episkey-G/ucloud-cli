@@ -236,7 +236,7 @@ var reservedCommands = map[string]bool{
 	"config":    true, // NewCmdConfig
 	"region":    true, // NewCmdRegion
 	"project":   true, // NewCmdProject
-	"uhost":     true, // NewCmdUHost
+	// uhost migrated to products/uhost (Part 6) — no longer platform-reserved.
 	"subnet":    true, // NewCmdSubnet
 	"vpc":       true, // NewCmdVpc
 	"bandwidth": true, // NewCmdBandwidth

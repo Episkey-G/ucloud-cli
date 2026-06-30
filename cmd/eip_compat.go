@@ -21,15 +21,14 @@ package cmd
 // cmd/eip.go (base.BizClient path).
 //
 // Consumers (kept until each migrates):
-//   - getAllEip:  cmd/uhost.go (Part 6, this batch), cmd/ulb.go, cmd/bandwidth.go,
-//                 cmd/globalssh.go (batch2)
-//   - sbindEIP:   cmd/uhost.go (Part 6, this batch), cmd/ext.go (platform, batch2)
+//   - getAllEip:  cmd/ulb.go, cmd/bandwidth.go, cmd/globalssh.go (batch2)
+//   - sbindEIP:   cmd/ext.go (platform, batch2)
 //   - bindEIP:    cmd/ulb.go (batch2)
 //   - unbindEIP:  cmd/ext.go (platform, batch2)
 //
-// Private deps getEIPIDbyIP/fetchAllEip/getEIP are included because the four
-// public helpers above call them. getEIPLine stays in cmd/util.go (consumed by
-// cmd/uhost.go and cmd/ulb.go), so it is intentionally NOT duplicated here.
+// Private deps getEIPIDbyIP/fetchAllEip are included because the four public
+// helpers above call them. getEIPLine stays in cmd/util.go (consumed by
+// cmd/ulb.go), so it is intentionally NOT duplicated here.
 //
 // Remove this file once all the consumers above have migrated (batch2).
 
@@ -121,19 +120,6 @@ func getAllEip(projectID, region string, states, paymodes []string) []string {
 		strs = append(strs, item.EIPId+"/"+strings.Join(ips, ","))
 	}
 	return strs
-}
-
-func getEIP(eipID string) (*unet.UnetEIPSet, error) {
-	req := base.BizClient.NewDescribeEIPRequest()
-	req.EIPIds = append(req.EIPIds, eipID)
-	resp, err := base.BizClient.DescribeEIP(req)
-	if err != nil {
-		return nil, err
-	}
-	if len(resp.EIPSet) == 1 {
-		return &resp.EIPSet[0], nil
-	}
-	return nil, fmt.Errorf("eip[%s] may not exist", eipID)
 }
 
 func bindEIP(resourceID, resourceType, eipID, projectID, region *string) {

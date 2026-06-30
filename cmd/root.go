@@ -161,7 +161,7 @@ func addPlatformCommands(root *cobra.Command) {
 	root.AddCommand(NewCmdConfig())
 	root.AddCommand(NewCmdRegion(out))
 	root.AddCommand(NewCmdProject())
-	root.AddCommand(NewCmdUHost())
+	// uhost migrated to products/uhost (Part 6); registered via products.gen.go.
 	root.AddCommand(NewCmdSubnet())
 	root.AddCommand(NewCmdVpc())
 	root.AddCommand(NewCmdBandwidth())

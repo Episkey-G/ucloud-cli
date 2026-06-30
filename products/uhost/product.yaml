@@ -1,12 +1,7 @@
 # products/uhost/product.yaml — uhost 产品元数据(归属真源,owner 自治维护)
-#
-# DORMANT during the Part 6 build: enabled:false + empty commands keeps the
-# package as unimported library code (gen-products skips disabled products, so
-# cmd/uhost.go keeps serving `uhost` and the golden is unchanged), while the
-# presence of this file satisfies check-product rule5 (a products/ dir must have
-# a product.yaml). The atomic switch commit flips enabled:true + commands:[uhost].
 name: uhost
 owners:
   - Episkey-G
-commands: []
-enabled: false
+commands:
+  - uhost
+enabled: true

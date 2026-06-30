@@ -106,7 +106,7 @@ func newCreate(ctx *cli.Context) *cobra.Command {
 					return fmt.Errorf("check image support feaures failed: %v", err)
 				} else {
 					image, ok := any.(*uhostsdk.UHostImageSet)
-					if !ok || image == nil {
+					if !ok {
 						return fmt.Errorf("check image support feaures failed, image %s may not exist", *req.ImageId)
 					}
 					for _, feature := range image.Features {
@@ -243,9 +243,12 @@ func newCreate(ctx *cli.Context) *cobra.Command {
 
 	req.ChargeType = flags.String("charge-type", "Month", "Optional.'Year',pay yearly;'Month',pay monthly;'Dynamic', pay hourly")
 	req.Quantity = flags.Int("quantity", 1, "Optional. The duration of the instance. N years/months.")
-	req.ProjectId = flags.String("project-id", ctx.DefaultProjectID(), "Optional. Assign project-id")
-	req.Region = flags.String("region", ctx.DefaultRegion(), "Optional. Assign region")
-	req.Zone = flags.String("zone", ctx.DefaultZone(), "Optional. Assign availability zone")
+	// bindProjectID/bindRegion/bindZone (cmd/uhost.go) → ctx.Bind*: these register
+	// the dynamic project/region/zone completion the golden requires (raw flags
+	// would drop it) and share the value with req via SetRef.
+	ctx.BindProjectID(cmd, req)
+	ctx.BindRegion(cmd, req)
+	ctx.BindZone(cmd, req)
 
 	req.MachineType = flags.String("machine-type", "N", "Optional. Accept values: N, C, G, O, OS. Forward to https://docs.ucloud.cn/api/uhost-api/uhost_type for details")
 	req.MinimalCpuPlatform = flags.String("minimal-cpu-platform", "", "Optional. Accept values: Intel/Auto, Intel/IvyBridge, Intel/Haswell, Intel/Broadwell, Intel/Skylake, Intel/Cascadelake")
@@ -387,7 +390,7 @@ func createMultipleUhost(ctx *cli.Context, prog *cli.Progress, client *uhostsdk.
 		if async {
 			block.Append(text)
 		} else {
-			prog.Sspoll(describeUHostByID(ctx), uhostID, text, []string{status.HOST_RUNNING, status.HOST_FAIL}, block, &req.CommonBase)
+			prog.Sspoll(sdescribeUHostByID(ctx), uhostID, text, []string{status.HOST_RUNNING, status.HOST_FAIL}, block, &req.CommonBase)
 		}
 		bindEipID := ""
 		if len(bindEipIDs) > i {
@@ -465,7 +468,7 @@ func createUhost(ctx *cli.Context, prog *cli.Progress, client *uhostsdk.UHostCli
 	if async {
 		block.Append(text)
 	} else {
-		prog.Sspoll(describeUHostByID(ctx), resp.UHostIds[0], text, []string{status.HOST_RUNNING, status.HOST_FAIL}, block, &req.CommonBase)
+		prog.Sspoll(sdescribeUHostByID(ctx), resp.UHostIds[0], text, []string{status.HOST_RUNNING, status.HOST_FAIL}, block, &req.CommonBase)
 	}
 
 	if bindEipID != "" {
@@ -553,8 +556,11 @@ func newDelete(ctx *cli.Context) *cobra.Command {
 	flags.SortFlags = false
 
 	uhostIDs = cmd.Flags().StringSlice("uhost-id", nil, "Requried. ResourceIDs(UhostIds) of the uhost instance")
-	req.Region = cmd.Flags().String("region", ctx.DefaultRegion(), "Optional. Assign region")
-	req.ProjectId = cmd.Flags().String("project-id", ctx.DefaultProjectID(), "Optional. Assign project-id")
+	// bindRegion/bindProjectID (cmd/uhost.go) → ctx.Bind*: register dynamic
+	// region/project completion (golden). --zone stays a raw flag (no completion),
+	// matching the original delete.
+	ctx.BindRegion(cmd, req)
+	ctx.BindProjectID(cmd, req)
 	req.Zone = cmd.Flags().String("zone", "", "Optional. availability zone")
 	isDestroy = cmd.Flags().Bool("destroy", false, "Optional. false,the uhost instance will be thrown to UHost recycle if you have permission; true,the uhost instance will be deleted directly")
 	cmd.Flags().BoolVar(&releaseEIP, "release-eip", true, "Optional. false,Unbind EIP only; true, Unbind EIP and release it")
@@ -580,18 +586,18 @@ func deleteUHost(ctx *cli.Context, prog *cli.Progress, client *uhostsdk.UHostCli
 		req := creq.(*uhostsdk.TerminateUHostInstanceRequest)
 		block := prog.NewBlock()
 		logs := []string{}
-		hostIns, err := describeUHostByID(ctx)(*req.UHostId, nil)
+		hostIns, err := sdescribeUHostByID(ctx)(*req.UHostId, nil)
 		if err != nil {
 			logs = append(logs, fmt.Sprintf("describe uhost[%s] failed: %s", *req.UHostId, cli.ParseError(err)))
 			return false, logs
 		}
 
-		ins, ok := hostIns.(*uhostsdk.UHostInstanceSet)
-		if !ok || ins == nil {
+		if hostIns == nil {
 			logs = append(logs, fmt.Sprintf("uhost[%s] does not exist", *req.UHostId))
 			return false, logs
 		}
 
+		ins := hostIns.(*uhostsdk.UHostInstanceSet)
 		if ins.State == "Running" {
 			_req := client.NewStopUHostInstanceRequest()
 			_req.ProjectId = req.ProjectId
@@ -627,6 +633,6 @@ func stopUhostInsV2(ctx *cli.Context, prog *cli.Progress, client *uhostsdk.UHost
 	if async {
 		block.Append(text)
 	} else {
-		prog.Sspoll(describeUHostByID(ctx), resp.UHostId, text, []string{status.HOST_STOPPED, status.HOST_FAIL}, block, nil)
+		prog.Sspoll(sdescribeUHostByID(ctx), resp.UHostId, text, []string{status.HOST_STOPPED, status.HOST_FAIL}, block, nil)
 	}
 }

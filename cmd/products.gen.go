@@ -8,6 +8,7 @@ import (
 	"github.com/ucloud/ucloud-cli/products/image"
 	"github.com/ucloud/ucloud-cli/products/udb"
 	"github.com/ucloud/ucloud-cli/products/udisk"
+	"github.com/ucloud/ucloud-cli/products/uhost"
 	"github.com/ucloud/ucloud-cli/products/uphost"
 )
 
@@ -19,6 +20,7 @@ func registeredProducts() []cli.Product {
 		image.New(),
 		udb.New(),
 		udisk.New(),
+		uhost.New(),
 		uphost.New(),
 	}
 }

@@ -334,7 +334,7 @@ func stopUhostIns(ctx *cli.Context, client *uhostsdk.UHostClient, req *uhostsdk.
 	// the writer but returns nothing, so we return true here: a successful
 	// (non-async) stop request that we then polled is treated as "stopped" for
 	// the resize state-transition, which matches the original intent.
-	ctx.PollerTo(w, describeUHostByID(ctx)).Spoll(resp.UHostId, text, []string{status.HOST_STOPPED, status.HOST_FAIL})
+	ctx.PollerTo(w, describeUHostByID(ctx, *req.ProjectId, *req.Region, *req.Zone)).Spoll(resp.UHostId, text, []string{status.HOST_STOPPED, status.HOST_FAIL})
 	return true
 }
 
@@ -371,7 +371,7 @@ func newStart(ctx *cli.Context) *cobra.Command {
 					if *async {
 						fmt.Fprintln(w, text)
 					} else {
-						ctx.PollerTo(w, describeUHostByID(ctx)).Spoll(resp.UHostId, text, []string{status.HOST_RUNNING, status.HOST_FAIL})
+						ctx.PollerTo(w, describeUHostByID(ctx, *req.ProjectId, *req.Region, *req.Zone)).Spoll(resp.UHostId, text, []string{status.HOST_RUNNING, status.HOST_FAIL})
 					}
 				}
 			}
@@ -414,7 +414,7 @@ func newReboot(ctx *cli.Context) *cobra.Command {
 					if *async {
 						fmt.Fprintln(w, text)
 					} else {
-						ctx.PollerTo(w, describeUHostByID(ctx)).Spoll(resp.UHostId, text, []string{status.HOST_RUNNING, status.HOST_FAIL})
+						ctx.PollerTo(w, describeUHostByID(ctx, *req.ProjectId, *req.Region, *req.Zone)).Spoll(resp.UHostId, text, []string{status.HOST_RUNNING, status.HOST_FAIL})
 					}
 				}
 			}
@@ -501,7 +501,7 @@ func resizeAttachedDisk(ctx *cli.Context, client *uhostsdk.UHostClient, req *uho
 	if async {
 		fmt.Fprintln(w, text)
 	} else {
-		ctx.PollerTo(w, describeUHostByID(ctx)).Spoll(host.UHostId, text, []string{status.HOST_RUNNING, status.HOST_STOPPED, status.HOST_FAIL})
+		ctx.PollerTo(w, describeUHostByID(ctx, *req.ProjectId, *req.Region, *req.Zone)).Spoll(host.UHostId, text, []string{status.HOST_RUNNING, status.HOST_STOPPED, status.HOST_FAIL})
 	}
 	return nil
 }
@@ -549,16 +549,12 @@ func newResize(ctx *cli.Context) *cobra.Command {
 			for _, id := range *uhostIDs {
 				id = ctx.PickResourceID(id)
 				req.UHostId = &id
-				host, err := describeUHostByID(ctx)(id, nil)
+				host, err := describeUHostByID(ctx, *req.ProjectId, *req.Region, *req.Zone)(id, nil)
 				if err != nil {
 					fmt.Fprintln(ctx.Err(), err)
 					return
 				}
-				inst, ok := host.(*uhostsdk.UHostInstanceSet)
-				if !ok || inst == nil {
-					fmt.Fprintf(ctx.Err(), "Something wrong, uhost[%s] may not exist\n", id)
-					return
-				}
+				inst := host.(*uhostsdk.UHostInstanceSet)
 				stopReq := client.NewStopUHostInstanceRequest()
 				stopReq.ProjectId = req.ProjectId
 				stopReq.Region = req.Region
@@ -580,7 +576,7 @@ func newResize(ctx *cli.Context) *cobra.Command {
 						if *async {
 							fmt.Fprintln(w, text)
 						} else {
-							ctx.PollerTo(w, describeUHostByID(ctx)).Spoll(resp.UHostId, text, []string{status.HOST_RUNNING, status.HOST_STOPPED, status.HOST_FAIL})
+							ctx.PollerTo(w, describeUHostByID(ctx, *req.ProjectId, *req.Region, *req.Zone)).Spoll(resp.UHostId, text, []string{status.HOST_RUNNING, status.HOST_STOPPED, status.HOST_FAIL})
 						}
 					}
 				}
@@ -768,7 +764,7 @@ func newClone(ctx *cli.Context) *cobra.Command {
 				if *async {
 					fmt.Fprintln(w, text)
 				} else {
-					ctx.PollerTo(w, describeUHostByID(ctx)).Spoll(resp.UHostIds[0], text, []string{status.HOST_RUNNING, status.HOST_FAIL})
+					ctx.PollerTo(w, describeUHostByID(ctx, *req.ProjectId, *req.Region, *req.Zone)).Spoll(resp.UHostIds[0], text, []string{status.HOST_RUNNING, status.HOST_FAIL})
 				}
 			} else {
 				ctx.HandleError(fmt.Errorf("expect uhost count 1, accept %d", len(resp.UHostIds)))
@@ -860,13 +856,9 @@ func newResetPassword(ctx *cli.Context) *cobra.Command {
 					fmt.Fprintln(ctx.Err(), err)
 					continue
 				}
-				host, err := describeUHostByID(ctx)(id, nil)
-				if err != nil {
-					fmt.Fprintln(ctx.Err(), err)
-					continue
-				}
+				host, err := describeUHostByID(ctx, *req.ProjectId, *req.Region, *req.Zone)(id, nil)
 				inst, ok := host.(*uhostsdk.UHostInstanceSet)
-				if !ok || inst == nil {
+				if !ok {
 					return
 				}
 				if inst.BootDiskState == "Initializing" {
@@ -902,12 +894,12 @@ func newResetPassword(ctx *cli.Context) *cobra.Command {
 // checkAndCloseUhost stops the uhost (with optional prompt) if it is running.
 // Mirrors cmd/uhost.go checkAndCloseUhost.
 func checkAndCloseUhost(ctx *cli.Context, client *uhostsdk.UHostClient, yes, async bool, uhostID, project, region, zone string) error {
-	host, err := describeUHostByID(ctx)(uhostID, nil)
+	host, err := describeUHostByID(ctx, project, region, zone)(uhostID, nil)
 	if err != nil {
 		return err
 	}
 	inst, ok := host.(*uhostsdk.UHostInstanceSet)
-	if ok && inst != nil {
+	if ok {
 		if inst.State == "Running" {
 			if !ctx.Confirm(yes, fmt.Sprintf("uhost[%s] will be stopped, can we do this?", uhostID)) {
 				return fmt.Errorf("skip, you do not agree to stop uhost")
@@ -956,13 +948,13 @@ func newReinstallOS(ctx *cli.Context) *cobra.Command {
 				return
 			}
 
-			any, err := describeUHostByID(ctx)(*req.UHostId, nil)
+			any, err := describeUHostByID(ctx, *req.ProjectId, *req.Region, *req.Zone)(*req.UHostId, nil)
 			if err != nil {
 				fmt.Fprintln(ctx.Err(), err)
 				return
 			}
 			uhostIns, ok := any.(*uhostsdk.UHostInstanceSet)
-			if ok && uhostIns != nil {
+			if ok {
 				for _, disk := range uhostIns.DiskSet {
 					if disk.Type == "Udisk" {
 						sure := false
@@ -1002,7 +994,7 @@ func newReinstallOS(ctx *cli.Context) *cobra.Command {
 			if *async {
 				fmt.Fprintln(w, text)
 			} else {
-				ctx.PollerTo(w, describeUHostByID(ctx)).Spoll(resp.UHostId, text, []string{status.HOST_RUNNING, status.HOST_FAIL})
+				ctx.PollerTo(w, describeUHostByID(ctx, *req.ProjectId, *req.Region, *req.Zone)).Spoll(resp.UHostId, text, []string{status.HOST_RUNNING, status.HOST_FAIL})
 			}
 		},
 	}

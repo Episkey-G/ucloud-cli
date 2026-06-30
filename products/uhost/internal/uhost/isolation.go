@@ -156,13 +156,13 @@ func newLeaveIsolationGroup(ctx *cli.Context) *cobra.Command {
 		Run: func(c *cobra.Command, args []string) {
 			for _, idname := range uhostIds {
 				id := ctx.PickResourceID(idname)
-				any, err := describeUHostByID(ctx)(id, nil)
+				any, err := describeUHostByID(ctx, *req.ProjectId, *req.Region, *req.Zone)(id, nil)
 				if err != nil {
 					ctx.LogError(fmt.Sprintf("fetch uhost %s failed: %v", idname, err))
 					continue
 				}
 				ins, ok := any.(*uhostsdk.UHostInstanceSet)
-				if !ok || ins == nil {
+				if !ok {
 					ctx.LogError(fmt.Sprintf("uhost %s may not exist", idname))
 					continue
 				}
