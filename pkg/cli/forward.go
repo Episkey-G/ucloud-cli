@@ -167,10 +167,13 @@ func (c *Context) HandleError(err error) { base.HandleErrorTo(c.err, err) }
 // diagnostics (warnings, errors, status). API request logging is handled
 // automatically by the platform SDK handler — products do NOT log requests
 // themselves (see batch-1 plan Part 0 Task 0.2 / D-C).
+// LogInfo writes to the log file only (no console). LogPrint/LogWarn/LogError
+// send their console copy to stderr (ctx.Err), never stdout, so machine output
+// on stdout stays clean; all four still record to cli.log / telemetry.
 func (c *Context) LogInfo(logs ...string)  { base.LogInfo(logs...) }
-func (c *Context) LogPrint(logs ...string) { base.LogPrint(logs...) }
-func (c *Context) LogWarn(logs ...string)  { base.LogWarn(logs...) }
-func (c *Context) LogError(logs ...string) { base.LogError(logs...) }
+func (c *Context) LogPrint(logs ...string) { base.LogPrintTo(c.err, logs...) }
+func (c *Context) LogWarn(logs ...string)  { base.LogWarnTo(c.err, logs...) }
+func (c *Context) LogError(logs ...string) { base.LogErrorTo(c.err, logs...) }
 
 // LogFilePath returns the path of the CLI log file (e.g. for "check logs in …").
 func (c *Context) LogFilePath() string { return base.GetLogFilePath() }

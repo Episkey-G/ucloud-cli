@@ -134,10 +134,14 @@ func LogInfo(logs ...string) {
 	}
 }
 
-// LogPrint 记录日志
-func LogPrint(logs ...string) {
-	_, ok := os.LookupEnv("COMP_LINE")
-	if ok {
+// LogPrint 记录日志. Console copy → global stdout; product code should prefer the
+// ctx wrappers (→ *To with stderr) so machine output on stdout stays clean.
+func LogPrint(logs ...string) { LogPrintTo(out, logs...) }
+
+// LogPrintTo is LogPrint with a caller-chosen console writer w (file + telemetry
+// unchanged).
+func LogPrintTo(w io.Writer, logs ...string) {
+	if _, ok := os.LookupEnv("COMP_LINE"); ok {
 		return
 	}
 	logs = redactLogLines(logs)
@@ -146,17 +150,21 @@ func LogPrint(logs ...string) {
 	goID := curGoroutineID()
 	for _, line := range logs {
 		logger.WithField("goroutine_id", goID).Print(line)
-		fmt.Fprintln(out, line)
+		fmt.Fprintln(w, line)
 	}
 	if ConfigIns.AgreeUploadLog {
 		UploadLogs(logs, "print", goID)
 	}
 }
 
-// LogWarn 记录日志
-func LogWarn(logs ...string) {
-	_, ok := os.LookupEnv("COMP_LINE")
-	if ok {
+// LogWarn 记录日志. Console copy → global stdout; product code should prefer the
+// ctx wrappers (→ *To with stderr).
+func LogWarn(logs ...string) { LogWarnTo(out, logs...) }
+
+// LogWarnTo is LogWarn with a caller-chosen console writer w (file + telemetry
+// unchanged).
+func LogWarnTo(w io.Writer, logs ...string) {
+	if _, ok := os.LookupEnv("COMP_LINE"); ok {
 		return
 	}
 	logs = redactLogLines(logs)
@@ -165,7 +173,7 @@ func LogWarn(logs ...string) {
 	goID := curGoroutineID()
 	for _, line := range logs {
 		logger.WithField("goroutine_id", goID).Warn(line)
-		fmt.Fprintln(out, line)
+		fmt.Fprintln(w, line)
 	}
 	if ConfigIns.AgreeUploadLog {
 		UploadLogs(logs, "warn", goID)
