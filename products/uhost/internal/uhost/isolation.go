@@ -48,7 +48,8 @@ func newIsolationCreate(ctx *cli.Context) *cobra.Command {
 				ctx.HandleError(err)
 				return
 			}
-			ctx.LogPrint(fmt.Sprintf("isolation group %s created", resp.GroupId))
+			fmt.Fprintf(ctx.ProgressWriter(), "isolation group %s created\n", resp.GroupId)
+			ctx.EmitResult(cli.OpResultRow{ResourceID: resp.GroupId, Action: "create", Status: "Created"})
 		},
 	}
 	flags := cmd.Flags()
@@ -72,6 +73,7 @@ func newIsolationDelete(ctx *cli.Context) *cobra.Command {
 		Use:   "delete",
 		Short: "Delete isolation group instances",
 		Run: func(c *cobra.Command, args []string) {
+			results := []cli.OpResultRow{}
 			for _, idname := range ids {
 				id := ctx.PickResourceID(idname)
 				req.GroupId = &id
@@ -80,8 +82,10 @@ func newIsolationDelete(ctx *cli.Context) *cobra.Command {
 					ctx.HandleError(err)
 					continue
 				}
-				ctx.LogPrint(fmt.Sprintf("isolation group %s deleted", idname))
+				fmt.Fprintf(ctx.ProgressWriter(), "isolation group %s deleted\n", idname)
+				results = append(results, cli.OpResultRow{ResourceID: id, Action: "delete", Status: "Deleted"})
 			}
+			ctx.EmitResult(results...)
 		},
 	}
 
@@ -154,6 +158,7 @@ func newLeaveIsolationGroup(ctx *cli.Context) *cobra.Command {
 		Use:   "leave-isolation-group",
 		Short: "Detach uhost from its isolation group",
 		Run: func(c *cobra.Command, args []string) {
+			results := []cli.OpResultRow{}
 			for _, idname := range uhostIds {
 				id := ctx.PickResourceID(idname)
 				any, err := describeUHostByID(ctx, *req.ProjectId, *req.Region, *req.Zone)(id, nil)
@@ -167,7 +172,7 @@ func newLeaveIsolationGroup(ctx *cli.Context) *cobra.Command {
 					continue
 				}
 				if ins.IsolationGroup == "" {
-					ctx.LogPrint(fmt.Sprintf("uhost %s doesn't attached any isolation group", idname))
+					fmt.Fprintf(ctx.ProgressWriter(), "uhost %s doesn't attached any isolation group\n", idname)
 					continue
 				}
 				req.GroupId = sdk.String(ins.IsolationGroup)
@@ -177,8 +182,10 @@ func newLeaveIsolationGroup(ctx *cli.Context) *cobra.Command {
 					ctx.HandleError(err)
 					continue
 				}
-				ctx.LogPrint(fmt.Sprintf("uhost %s detached from isolation group %s", idname, ins.IsolationGroup))
+				fmt.Fprintf(ctx.ProgressWriter(), "uhost %s detached from isolation group %s\n", idname, ins.IsolationGroup)
+				results = append(results, cli.OpResultRow{ResourceID: id, Action: "leave-isolation-group", Status: "Detached"})
 			}
+			ctx.EmitResult(results...)
 		},
 	}
 	flags := cmd.Flags()
