@@ -637,7 +637,7 @@ func newSnapshotList(ctx *cli.Context) *cobra.Command {
 	req.ProjectId = flags.String("project-id", ctx.DefaultProjectID(), "Optional. Assign project-id")
 	req.Region = flags.String("region", ctx.DefaultRegion(), "Optional. Assign region")
 	req.Zone = flags.String("zone", ctx.DefaultZone(), "Optional. Assign availability zone")
-	req.SnapshotIds = *flags.StringSlice("snaphost-id", nil, "Optional. Resource ID of snapshots to list")
+	req.SnapshotIds = *flags.StringSlice("snapshot-id", nil, "Optional. Resource ID of snapshots to list")
 	req.UHostId = flags.String("uhost-id", "", "Optional. Snapshots of the uhost")
 	req.DiskId = flags.String("disk-id", "", "Optional. Snapshots of the udisk")
 	req.Offset = cmd.Flags().Int("offset", 0, "Optional. Offset")
@@ -678,7 +678,7 @@ func newSnapshotDelete(ctx *cli.Context) *cobra.Command {
 	req.ProjectId = flags.String("project-id", ctx.DefaultProjectID(), "Optional. Assign project-id")
 	req.Region = flags.String("region", ctx.DefaultRegion(), "Optional. Assign region")
 	req.Zone = flags.String("zone", ctx.DefaultZone(), "Optional. Assign availability zone")
-	snapshotIds = flags.StringSlice("snaphost-id", nil, "Optional. Resource ID of snapshots to delete")
+	snapshotIds = flags.StringSlice("snapshot-id", nil, "Required. Resource ID of snapshots to delete")
 	cmd.MarkFlagRequired("snapshot-id")
 	return cmd
 }
