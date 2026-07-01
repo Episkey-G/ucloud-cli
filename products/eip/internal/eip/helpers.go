@@ -83,8 +83,10 @@ func getEIP(ctx *cli.Context, eipID string) (*unet.UnetEIPSet, error) {
 
 // bindEIP binds an EIP to a resource. Ported from cmd/eip.go
 // (base.BizClient → cli.NewServiceClient; progress→ProgressWriter,
-// errors→ctx.HandleError).
-func bindEIP(ctx *cli.Context, resourceID, resourceType, eipID, projectID, region *string) {
+// errors→ctx.HandleError). Returns a non-nil error when the bind fails so the
+// caller only emits a structured "Bound" result on success (machine output must
+// not report success for a failed operation).
+func bindEIP(ctx *cli.Context, resourceID, resourceType, eipID, projectID, region *string) error {
 	ip := net.ParseIP(*eipID)
 	if ip != nil {
 		id, err := getEIPIDbyIP(ctx, ip, *projectID, *region)
@@ -104,9 +106,10 @@ func bindEIP(ctx *cli.Context, resourceID, resourceType, eipID, projectID, regio
 	_, err := client.BindEIP(req)
 	if err != nil {
 		ctx.HandleError(err)
-	} else {
-		fmt.Fprintf(ctx.ProgressWriter(), "bind EIP[%s] with %s[%s]\n", *req.EIPId, *req.ResourceType, *req.ResourceId)
+		return err
 	}
+	fmt.Fprintf(ctx.ProgressWriter(), "bind EIP[%s] with %s[%s]\n", *req.EIPId, *req.ResourceType, *req.ResourceId)
+	return nil
 }
 
 // sbindEIP binds an EIP to a resource, returning a log trail instead of

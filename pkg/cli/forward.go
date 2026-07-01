@@ -149,11 +149,18 @@ func (c *Context) PrintList(dataSet interface{}) {
 // PrintJSON renders dataSet as JSON to the ctx writer.
 func (c *Context) PrintJSON(dataSet interface{}) error { return ui.PrintJSON(dataSet, c.out) }
 
-// Confirm prompts the user for a yes/no confirmation on the ctx streams.
-func (c *Context) Confirm(yes bool, text string) bool { return ui.Confirm(c.in, c.out, yes, text) }
+// Confirm prompts the user for a yes/no confirmation. The prompt is written to
+// the progress writer (stdout in table mode, stderr in json/yaml mode) so it
+// never corrupts machine-readable output on stdout; the answer is read from the
+// ctx input stream.
+func (c *Context) Confirm(yes bool, text string) bool {
+	return ui.Confirm(c.in, c.ProgressWriter(), yes, text)
+}
 
-// HandleError logs err in the standard CLI error format.
-func (c *Context) HandleError(err error) { base.HandleError(err) }
+// HandleError renders err (business RetCode / transport error) to stderr — never
+// stdout, so machine output on stdout stays clean — and records it to the
+// cli.log file / telemetry.
+func (c *Context) HandleError(err error) { base.HandleErrorTo(c.err, err) }
 
 // LogInfo / LogPrint / LogWarn / LogError forward to the platform logger
 // (cli.log + optional telemetry, with redaction) for non-request product

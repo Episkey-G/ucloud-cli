@@ -204,8 +204,9 @@ func newBind(ctx *cli.Context) *cobra.Command {
 		Run: func(cmd *cobra.Command, args []string) {
 			results := []cli.OpResultRow{}
 			for _, eipID := range eipIDs {
-				bindEIP(ctx, resourceID, resourceType, &eipID, projectID, region)
-				results = append(results, cli.OpResultRow{ResourceID: ctx.PickResourceID(eipID), Action: "bind", Status: "Bound"})
+				if err := bindEIP(ctx, resourceID, resourceType, &eipID, projectID, region); err == nil {
+					results = append(results, cli.OpResultRow{ResourceID: ctx.PickResourceID(eipID), Action: "bind", Status: "Bound"})
+				}
 			}
 			ctx.EmitResult(results...)
 		},
