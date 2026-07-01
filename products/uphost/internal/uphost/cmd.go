@@ -34,6 +34,7 @@ func newList(ctx *cli.Context) *cobra.Command {
 		Short: "List UPHost instances",
 		Long:  "List UPHost instances",
 		Run: func(c *cobra.Command, args []string) {
+			req.PHostId = ids
 			resp, err := client.DescribePHost(req)
 			if err != nil {
 				ctx.HandleError(err)
