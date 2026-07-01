@@ -140,7 +140,11 @@ func listUhostID(ctx *cli.Context, uhosts []uhostsdk.UHostInstanceSet) {
 	for _, u := range uhosts {
 		ids = append(ids, u.UHostId)
 	}
-	fmt.Fprintln(ctx.ProgressWriter(), strings.Join(ids, ","))
+	// The id list IS the result of --uhost-id-only, not narration: write it to
+	// stdout (ctx.Out), never ProgressWriter — otherwise in non-TTY/json mode the
+	// ids go to stderr and `ids=$(ucloud uhost list --uhost-id-only)` captures
+	// nothing.
+	fmt.Fprintln(ctx.Out(), strings.Join(ids, ","))
 }
 
 func fetchUHosts(client *uhostsdk.UHostClient, req *uhostsdk.DescribeUHostInstanceRequest) ([]uhostsdk.UHostInstanceSet, int, error) {
