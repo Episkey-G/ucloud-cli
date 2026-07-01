@@ -25,6 +25,39 @@ import (
 // cmd/uhost.go.
 const _MaxBoundSecGroupCount = 5
 
+// failCounter is a concurrency-safe tally of failed create/delete operations, so
+// RunE can return a non-zero exit when any item fails (aws/gcloud convention: a
+// failed command exits non-zero, not 0).
+type failCounter struct {
+	mu sync.Mutex
+	n  int
+}
+
+func (f *failCounter) inc() {
+	f.mu.Lock()
+	f.n++
+	f.mu.Unlock()
+}
+
+func (f *failCounter) count() int {
+	f.mu.Lock()
+	defer f.mu.Unlock()
+	return f.n
+}
+
+// reportFail records a failure message: it appends to the progress block (shown
+// on a TTY) and, when the block is NOT being animated (non-TTY writer, or the
+// aggregate count>5 path), also writes the message to stderr so scripted/piped
+// callers still see the error. Mirrors the aws/gcloud convention that command
+// errors always reach stderr regardless of whether stdout is a terminal, while
+// the spinner stays TTY-only.
+func reportFail(ctx *cli.Context, prog *cli.Progress, block *cli.Block, msg string) {
+	block.Append(msg)
+	if !prog.Animated() {
+		fmt.Fprintln(ctx.Err(), msg)
+	}
+}
+
 // newCreate ucloud uhost create
 func newCreate(ctx *cli.Context) *cobra.Command {
 	var bindEipIDs []string
@@ -50,6 +83,10 @@ func newCreate(ctx *cli.Context) *cobra.Command {
 		Use:   "create",
 		Short: "Create UHost instance",
 		Long:  "Create UHost instance",
+		// SilenceUsage: runtime failures (RunE returning an error below) must not
+		// dump the full flag usage — aws/gcloud print the error only. Flag/arg
+		// mistakes still print their own message via cobra.
+		SilenceUsage: true,
 		PreRunE: func(cmd *cobra.Command, args []string) error {
 			if len(userData) > 0 && len(userDataBase64) > 0 {
 				return fmt.Errorf("%q conflicts with %q, can only set one of both", "user-data", "user-data-base64")
@@ -149,6 +186,7 @@ func newCreate(ctx *cli.Context) *cobra.Command {
 			prog := ctx.NewProgress()
 			wg := &sync.WaitGroup{}
 			tokens := make(chan struct{}, concurrent)
+			fc := &failCounter{}
 			wg.Add(count)
 			batchRename, err := regexp.Match(`\[\d+,\d+\]`, []byte(*req.Name))
 			if err != nil || !batchRename {
@@ -164,7 +202,7 @@ func newCreate(ctx *cli.Context) *cobra.Command {
 					actualRequest.NetworkInterface = nil
 				}
 				wg.Add(1 - count)
-				createMultipleUhostWrapper(ctx, prog, client, unetClient, &actualRequest, count, updateEIPReq, bindEipIDs, async, make(chan bool, 1), wg, tokens)
+				createMultipleUhostWrapper(ctx, prog, client, unetClient, &actualRequest, count, updateEIPReq, bindEipIDs, async, make(chan bool, 1), wg, tokens, fc)
 
 			} else if count <= 5 {
 				for i := 0; i < count; i++ {
@@ -177,7 +215,7 @@ func newCreate(ctx *cli.Context) *cobra.Command {
 					if bindEipID != "" {
 						actualRequest.NetworkInterface = nil
 					}
-					createUhostWrapper(ctx, prog, client, unetClient, &actualRequest, updateEIPReq, bindEipID, async, make(chan bool, count), wg, tokens, i)
+					createUhostWrapper(ctx, prog, client, unetClient, &actualRequest, updateEIPReq, bindEipID, async, make(chan bool, count), wg, tokens, i, fc)
 				}
 			} else {
 				retCh := make(chan bool, count)
@@ -191,7 +229,7 @@ func newCreate(ctx *cli.Context) *cobra.Command {
 							bindEipID = bindEipIDs[i]
 							actualRequest.NetworkInterface = nil
 						}
-						go createUhostWrapper(ctx, prog, client, unetClient, &actualRequest, updateEIPReq, bindEipID, async, retCh, wg, tokens, i)
+						go createUhostWrapper(ctx, prog, client, unetClient, &actualRequest, updateEIPReq, bindEipID, async, retCh, wg, tokens, i, fc)
 					}
 				}(*req)
 
@@ -212,6 +250,9 @@ func newCreate(ctx *cli.Context) *cobra.Command {
 				}()
 			}
 			wg.Wait()
+			if n := fc.count(); n > 0 {
+				return fmt.Errorf("%d of %d uhost create operation(s) failed; see the error(s) above or logs in %s", n, count, ctx.LogFilePath())
+			}
 			return nil
 		},
 	}
@@ -314,7 +355,7 @@ func newCreate(ctx *cli.Context) *cobra.Command {
 
 // createMultipleUhostWrapper handles UI + concurrency control for the batch-rename
 // path. Mirrors cmd/uhost.go createMultipleUhostWrapper.
-func createMultipleUhostWrapper(ctx *cli.Context, prog *cli.Progress, client *uhostsdk.UHostClient, unetClient *unet.UNetClient, req *uhostsdk.CreateUHostInstanceRequest, count int, updateEIPReq *unet.UpdateEIPAttributeRequest, bindEipIDs []string, async bool, retCh chan<- bool, wg *sync.WaitGroup, tokens chan struct{}) {
+func createMultipleUhostWrapper(ctx *cli.Context, prog *cli.Progress, client *uhostsdk.UHostClient, unetClient *unet.UNetClient, req *uhostsdk.CreateUHostInstanceRequest, count int, updateEIPReq *unet.UpdateEIPAttributeRequest, bindEipIDs []string, async bool, retCh chan<- bool, wg *sync.WaitGroup, tokens chan struct{}, fc *failCounter) {
 	//控制并发数量
 	tokens <- struct{}{}
 	defer func() {
@@ -325,6 +366,9 @@ func createMultipleUhostWrapper(ctx *cli.Context, prog *cli.Progress, client *uh
 	}()
 
 	success, logs := createMultipleUhost(ctx, prog, client, unetClient, req, count, updateEIPReq, bindEipIDs, async)
+	if !success {
+		fc.inc()
+	}
 	retCh <- success
 	logs = append(logs, fmt.Sprintf("result:%t", success))
 	ctx.LogInfo(logs...)
@@ -332,7 +376,7 @@ func createMultipleUhostWrapper(ctx *cli.Context, prog *cli.Progress, client *uh
 
 // createUhostWrapper handles UI + concurrency control for one uhost. Mirrors
 // cmd/uhost.go createUhostWrapper.
-func createUhostWrapper(ctx *cli.Context, prog *cli.Progress, client *uhostsdk.UHostClient, unetClient *unet.UNetClient, req *uhostsdk.CreateUHostInstanceRequest, updateEIPReq *unet.UpdateEIPAttributeRequest, bindEipID string, async bool, retCh chan<- bool, wg *sync.WaitGroup, tokens chan struct{}, idx int) {
+func createUhostWrapper(ctx *cli.Context, prog *cli.Progress, client *uhostsdk.UHostClient, unetClient *unet.UNetClient, req *uhostsdk.CreateUHostInstanceRequest, updateEIPReq *unet.UpdateEIPAttributeRequest, bindEipID string, async bool, retCh chan<- bool, wg *sync.WaitGroup, tokens chan struct{}, idx int, fc *failCounter) {
 	//控制并发数量
 	tokens <- struct{}{}
 	defer func() {
@@ -343,6 +387,9 @@ func createUhostWrapper(ctx *cli.Context, prog *cli.Progress, client *uhostsdk.U
 	}()
 
 	success, logs := createUhost(ctx, prog, client, unetClient, req, updateEIPReq, bindEipID, async)
+	if !success {
+		fc.inc()
+	}
 	retCh <- success
 	logs = append(logs, fmt.Sprintf("index:%d, result:%t", idx, success))
 	ctx.LogInfo(logs...)
@@ -359,18 +406,18 @@ func createMultipleUhost(ctx *cli.Context, prog *cli.Progress, client *uhostsdk.
 	logs := []string{"=================================================="}
 	if err != nil {
 		logs = append(logs, fmt.Sprintf("err:%v", err))
-		block.Append(cli.ParseError(err))
+		reportFail(ctx, prog, block, cli.ParseError(err))
 		return false, logs
 	}
 	if len(bindEipIDs) > 0 && len(bindEipIDs) != count {
-		block.Append(fmt.Sprintf("expect eip count %d, accept %d", count, len(bindEipIDs)))
+		reportFail(ctx, prog, block, fmt.Sprintf("expect eip count %d, accept %d", count, len(bindEipIDs)))
 		return false, logs
 	}
 
 	logs = append(logs, fmt.Sprintf("resp:%#v", resp))
 
 	if len(resp.UHostIds) != *req.MaxCount {
-		block.Append(fmt.Sprintf("expect uhost count %d, accept %d", count, len(resp.UHostIds)))
+		reportFail(ctx, prog, block, fmt.Sprintf("expect uhost count %d, accept %d", count, len(resp.UHostIds)))
 		return false, logs
 	}
 	for i, uhostID := range resp.UHostIds {
@@ -403,14 +450,14 @@ func createMultipleUhost(ctx *cli.Context, prog *cli.Progress, client *uhostsdk.
 			eipLogs, err := sbindEIP(ctx, sdk.String(uhostID), sdk.String("uhost"), &eip, req.ProjectId, req.Region)
 			logs = append(logs, eipLogs...)
 			if err != nil {
-				block.Append(fmt.Sprintf("bind eip[%s] with uhost[%s] failed: %v", eip, uhostID, err))
+				reportFail(ctx, prog, block, fmt.Sprintf("bind eip[%s] with uhost[%s] failed: %v", eip, uhostID, err))
 				return false, logs
 			}
 			block.Append(fmt.Sprintf("bind eip[%s] with uhost[%s] successfully", eip, uhostID))
 		} else if len(req.NetworkInterface) > 0 {
 			ipSet, err := getEIPByUHostId(ctx, uhostID)
 			if err != nil {
-				block.Append(err.Error())
+				reportFail(ctx, prog, block, err.Error())
 				return false, logs
 			}
 			block.Append(fmt.Sprintf("IP:%s  Line:%s", ipSet.IP, ipSet.Type))
@@ -428,7 +475,7 @@ func createMultipleUhost(ctx *cli.Context, prog *cli.Progress, client *uhostsdk.
 				updateEIPReq.EIPId = sdk.String(ipSet.IPId)
 				_, err = unetClient.UpdateEIPAttribute(updateEIPReq)
 				if err != nil {
-					block.Append(fmt.Sprintf("update attribute %s of eip[%s] binded uhost[%s] got err, %s", message, ipSet.IPId, uhostID, err))
+					reportFail(ctx, prog, block, fmt.Sprintf("update attribute %s of eip[%s] binded uhost[%s] got err, %s", message, ipSet.IPId, uhostID, err))
 					return false, logs
 				}
 				block.Append(fmt.Sprintf("update attribute %s of eip[%s] binded uhost[%s] successfully", message, ipSet.IPId, uhostID))
@@ -444,13 +491,13 @@ func createUhost(ctx *cli.Context, prog *cli.Progress, client *uhostsdk.UHostCli
 	logs := []string{"=================================================="}
 	if err != nil {
 		logs = append(logs, fmt.Sprintf("err:%v", err))
-		block.Append(cli.ParseError(err))
+		reportFail(ctx, prog, block, cli.ParseError(err))
 		return false, logs
 	}
 
 	logs = append(logs, fmt.Sprintf("resp:%#v", resp))
 	if len(resp.UHostIds) != 1 {
-		block.Append(fmt.Sprintf("expect uhost count 1 , accept %d", len(resp.UHostIds)))
+		reportFail(ctx, prog, block, fmt.Sprintf("expect uhost count 1 , accept %d", len(resp.UHostIds)))
 		return false, logs
 	}
 
@@ -477,14 +524,14 @@ func createUhost(ctx *cli.Context, prog *cli.Progress, client *uhostsdk.UHostCli
 		eipLogs, err := sbindEIP(ctx, sdk.String(resp.UHostIds[0]), sdk.String("uhost"), &eip, req.ProjectId, req.Region)
 		logs = append(logs, eipLogs...)
 		if err != nil {
-			block.Append(fmt.Sprintf("bind eip[%s] with uhost[%s] failed: %v", eip, resp.UHostIds[0], err))
+			reportFail(ctx, prog, block, fmt.Sprintf("bind eip[%s] with uhost[%s] failed: %v", eip, resp.UHostIds[0], err))
 			return false, logs
 		}
 		block.Append(fmt.Sprintf("bind eip[%s] with uhost[%s] successfully", eip, resp.UHostIds[0]))
 	} else if len(req.NetworkInterface) > 0 {
 		ipSet, err := getEIPByUHostId(ctx, resp.UHostIds[0])
 		if err != nil {
-			block.Append(err.Error())
+			reportFail(ctx, prog, block, err.Error())
 			return false, logs
 		}
 		block.Append(fmt.Sprintf("IP:%s  Line:%s", ipSet.IP, ipSet.Type))
@@ -502,7 +549,7 @@ func createUhost(ctx *cli.Context, prog *cli.Progress, client *uhostsdk.UHostCli
 			updateEIPReq.EIPId = sdk.String(ipSet.IPId)
 			_, err = unetClient.UpdateEIPAttribute(updateEIPReq)
 			if err != nil {
-				block.Append(fmt.Sprintf("update attribute %s of eip[%s] binded uhost[%s] got err, %s", message, ipSet.IPId, resp.UHostIds[0], err))
+				reportFail(ctx, prog, block, fmt.Sprintf("update attribute %s of eip[%s] binded uhost[%s] got err, %s", message, ipSet.IPId, resp.UHostIds[0], err))
 				return false, logs
 			}
 			block.Append(fmt.Sprintf("update attribute %s of eip[%s] binded uhost[%s] successfully", message, ipSet.IPId, resp.UHostIds[0]))
@@ -524,9 +571,11 @@ func newDelete(ctx *cli.Context) *cobra.Command {
 		Use:   "delete",
 		Short: "Delete Uhost instance",
 		Long:  "Delete Uhost instance",
-		Run: func(cmd *cobra.Command, args []string) {
+		// SilenceUsage: a delete that fails at runtime must not dump flag usage.
+		SilenceUsage: true,
+		RunE: func(cmd *cobra.Command, args []string) error {
 			if !ctx.Confirm(*yes, "Are you sure you want to delete the host(s)?") {
-				return
+				return nil
 			}
 			if *isDestroy {
 				req.Destroy = sdk.Int(1)
@@ -549,7 +598,19 @@ func newDelete(ctx *cli.Context) *cobra.Command {
 			if len(reqs) > 5 {
 				prog.Disable()
 			}
-			ctx.ConcurrentAction(reqs, 50, deleteUHost(ctx, prog, client))
+			fc := &failCounter{}
+			action := deleteUHost(ctx, prog, client)
+			ctx.ConcurrentAction(reqs, 50, func(r request.Common) (bool, []string) {
+				ok, logs := action(r)
+				if !ok {
+					fc.inc()
+				}
+				return ok, logs
+			})
+			if n := fc.count(); n > 0 {
+				return fmt.Errorf("%d of %d uhost delete operation(s) failed; see the error(s) above or logs in %s", n, len(reqs), ctx.LogFilePath())
+			}
+			return nil
 		},
 	}
 	flags := cmd.Flags()
@@ -588,11 +649,13 @@ func deleteUHost(ctx *cli.Context, prog *cli.Progress, client *uhostsdk.UHostCli
 		logs := []string{}
 		hostIns, err := sdescribeUHostByID(ctx)(*req.UHostId, nil)
 		if err != nil {
+			reportFail(ctx, prog, block, fmt.Sprintf("describe uhost[%s] failed: %s", *req.UHostId, cli.ParseError(err)))
 			logs = append(logs, fmt.Sprintf("describe uhost[%s] failed: %s", *req.UHostId, cli.ParseError(err)))
 			return false, logs
 		}
 
 		if hostIns == nil {
+			reportFail(ctx, prog, block, fmt.Sprintf("uhost[%s] does not exist", *req.UHostId))
 			logs = append(logs, fmt.Sprintf("uhost[%s] does not exist", *req.UHostId))
 			return false, logs
 		}
@@ -609,7 +672,7 @@ func deleteUHost(ctx *cli.Context, prog *cli.Progress, client *uhostsdk.UHostCli
 
 		resp, err := client.TerminateUHostInstance(req)
 		if err != nil {
-			block.Append(cli.ParseError(err))
+			reportFail(ctx, prog, block, cli.ParseError(err))
 			logs = append(logs, fmt.Sprintf("delete uhost[%s] failed: %s", *req.UHostId, cli.ParseError(err)))
 			return false, logs
 		}
