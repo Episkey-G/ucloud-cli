@@ -257,12 +257,14 @@ func newList(ctx *cli.Context) *cobra.Command {
 	cmd.Flags().BoolVar(&allRegion, "all-region", false, "Optional. Accpet values: true or false. List uhost instances of all regions when assigned true")
 	cmd.Flags().BoolVar(&pageOff, "page-off", false, "Optional. Paging or not. If all-region is specified this flag will be true. Accept values: true or false. If assigned, the limit flag will be disabled and list all uhost instances")
 	cmd.Flags().BoolVar(&idOnly, "uhost-id-only", false, "Optional. Just display resource id of uhost")
-	cmd.Flags().StringVarP(&output, "output", "o", "", "Optional. Accept values: wide. Display more information about uhost such as DiskSet and Zone")
+	// Named "detail" (not "output") so it no longer shadows the global persistent
+	// --output format selector; -o wide still works for backward compatibility.
+	cmd.Flags().StringVarP(&output, "detail", "o", "", "Optional. Accept values: wide. Display more information about uhost such as DiskSet and Zone")
 	ctx.BindGroup(cmd, req)
 
 	command.SetFlagValues(cmd, "page-off", "true", "false")
 	command.SetFlagValues(cmd, "uhost-id-only", "true", "false")
-	command.SetFlagValues(cmd, "output", "wide")
+	command.SetFlagValues(cmd, "detail", "wide")
 	command.SetCompletion(cmd, "project-id", ctx.ProjectList)
 	command.SetCompletion(cmd, "region", ctx.RegionList)
 	command.SetCompletion(cmd, "zone", func() []string {

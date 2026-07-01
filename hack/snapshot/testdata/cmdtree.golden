@@ -917,11 +917,11 @@ ucloud uhost leave-isolation-group	use=leave-isolation-group	short=Detach uhost 
   flag=zone	short=	default=	required=
 ucloud uhost list	use=list	short=List all UHost Instances
   flag=all-region	short=	default=false	required=
+  flag=detail	short=o	default=	required=
   flag=group	short=	default=	required=
   flag=isolation-group	short=	default=	required=
   flag=limit	short=	default=50	required=
   flag=offset	short=	default=0	required=
-  flag=output	short=o	default=	required=
   flag=page-off	short=	default=false	required=
   flag=project-id	short=	default=	required=
   flag=region	short=	default=	required=
