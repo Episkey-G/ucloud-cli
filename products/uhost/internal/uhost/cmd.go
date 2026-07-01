@@ -53,10 +53,11 @@ func NewCommand(ctx *cli.Context) *cobra.Command {
 }
 
 // listUhost renders the uhost slice via ctx.PrintList, selecting columns per
-// output mode using the per-mode row structs (rows.go). Mirrors cmd/uhost.go
-// listUhost: wide → full uhostRow; default → uhostRowDefault; default+allRegion
-// → uhostRowAllRegion (adds trailing Zone); json → full uhostRow always.
-func listUhost(ctx *cli.Context, uhosts []uhostsdk.UHostInstanceSet, output string, listAllRegion bool) {
+// output mode using the per-mode row structs (rows.go). AWS-style: --output
+// selects only the format — table shows curated columns (uhostRowDefault, or
+// uhostRowAllRegion with a trailing Zone under --all-region); json/yaml always
+// emit the full uhostRow so no field is lost (e.g. DiskSet/VPC/Subnet).
+func listUhost(ctx *cli.Context, uhosts []uhostsdk.UHostInstanceSet, listAllRegion bool) {
 	list := make([]uhostRow, 0)
 	for _, host := range uhosts {
 		row := uhostRow{}
@@ -107,10 +108,6 @@ func listUhost(ctx *cli.Context, uhosts []uhostsdk.UHostInstanceSet, output stri
 		return
 	}
 
-	if output == "wide" {
-		ctx.PrintList(list)
-		return
-	}
 	if listAllRegion {
 		rows := make([]uhostRowAllRegion, 0, len(list))
 		for _, r := range list {
@@ -216,7 +213,6 @@ func getAllUHosts(ctx *cli.Context, client *uhostsdk.UHostClient, req *uhostsdk.
 // newList ucloud uhost list
 func newList(ctx *cli.Context) *cobra.Command {
 	var allRegion, pageOff, idOnly bool
-	var output string
 	var uhostIds []string
 	client := cli.NewServiceClient(ctx, uhostsdk.NewClient)
 	req := client.NewDescribeUHostInstanceRequest()
@@ -240,7 +236,7 @@ func newList(ctx *cli.Context) *cobra.Command {
 			if idOnly {
 				listUhostID(ctx, uhosts)
 			} else {
-				listUhost(ctx, uhosts, output, allRegion)
+				listUhost(ctx, uhosts, allRegion)
 			}
 		},
 	}
@@ -257,14 +253,10 @@ func newList(ctx *cli.Context) *cobra.Command {
 	cmd.Flags().BoolVar(&allRegion, "all-region", false, "Optional. Accpet values: true or false. List uhost instances of all regions when assigned true")
 	cmd.Flags().BoolVar(&pageOff, "page-off", false, "Optional. Paging or not. If all-region is specified this flag will be true. Accept values: true or false. If assigned, the limit flag will be disabled and list all uhost instances")
 	cmd.Flags().BoolVar(&idOnly, "uhost-id-only", false, "Optional. Just display resource id of uhost")
-	// Named "detail" (not "output") so it no longer shadows the global persistent
-	// --output format selector; -o wide still works for backward compatibility.
-	cmd.Flags().StringVarP(&output, "detail", "o", "", "Optional. Accept values: wide. Display more information about uhost such as DiskSet and Zone")
 	ctx.BindGroup(cmd, req)
 
 	command.SetFlagValues(cmd, "page-off", "true", "false")
 	command.SetFlagValues(cmd, "uhost-id-only", "true", "false")
-	command.SetFlagValues(cmd, "detail", "wide")
 	command.SetCompletion(cmd, "project-id", ctx.ProjectList)
 	command.SetCompletion(cmd, "region", ctx.RegionList)
 	command.SetCompletion(cmd, "zone", func() []string {
