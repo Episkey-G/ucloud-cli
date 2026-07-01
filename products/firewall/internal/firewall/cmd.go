@@ -385,7 +385,7 @@ func newCopy(ctx *cli.Context) *cobra.Command {
 	command.SetCompletion(cmd, "target-region", ctx.RegionList)
 	command.SetCompletion(cmd, "region", ctx.RegionList)
 
-	cmd.MarkFlagRequired("src-fw-id")
+	cmd.MarkFlagRequired("src-fw")
 	cmd.MarkFlagRequired("name")
 
 	return cmd

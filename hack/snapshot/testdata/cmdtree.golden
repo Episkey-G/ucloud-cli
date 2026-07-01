@@ -179,7 +179,7 @@ ucloud firewall copy	use=copy	short=Copy firewall
   flag=name	short=	default=	required=true
   flag=project-id	short=	default=	required=
   flag=region	short=	default=	required=
-  flag=src-fw	short=	default=	required=
+  flag=src-fw	short=	default=	required=true
   flag=target-region	short=	default=	required=
 ucloud firewall create	use=create	short=Create firewall
   flag=group	short=	default=	required=
