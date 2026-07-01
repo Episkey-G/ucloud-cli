@@ -605,8 +605,8 @@ func newSnapshotList(ctx *cli.Context) *cobra.Command {
 	req := client.NewDescribeSnapshotRequest()
 	cmd := &cobra.Command{
 		Use:   "list-snapshot",
-		Short: "List snaphosts",
-		Long:  "List snaphosts",
+		Short: "List snapshots",
+		Long:  "List snapshots",
 		Run: func(c *cobra.Command, args []string) {
 			resp, err := client.DescribeSnapshot(req)
 			if err != nil {
@@ -641,7 +641,7 @@ func newSnapshotList(ctx *cli.Context) *cobra.Command {
 	req.UHostId = flags.String("uhost-id", "", "Optional. Snapshots of the uhost")
 	req.DiskId = flags.String("disk-id", "", "Optional. Snapshots of the udisk")
 	req.Offset = cmd.Flags().Int("offset", 0, "Optional. Offset")
-	req.Limit = cmd.Flags().Int("limit", 50, "Optional. Limit, length of snaphost list")
+	req.Limit = cmd.Flags().Int("limit", 50, "Optional. Limit, length of snapshot list")
 
 	return cmd
 }

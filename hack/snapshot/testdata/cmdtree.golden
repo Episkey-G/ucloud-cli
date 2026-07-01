@@ -780,7 +780,7 @@ ucloud udisk list	use=list	short=List udisk instance
   flag=udisk-id	short=	default=	required=
   flag=udisk-type	short=	default=	required=
   flag=zone	short=	default=	required=
-ucloud udisk list-snapshot	use=list-snapshot	short=List snaphosts
+ucloud udisk list-snapshot	use=list-snapshot	short=List snapshots
   flag=disk-id	short=	default=	required=
   flag=limit	short=	default=50	required=
   flag=offset	short=	default=0	required=
