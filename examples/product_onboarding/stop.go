@@ -25,6 +25,8 @@ func newStop(ctx *cli.Context) *cobra.Command {
 		Short: "Stop example instances",
 		Long:  "Stop one or more running example instances.",
 		Run: func(c *cobra.Command, args []string) {
+			w := ctx.ProgressWriter()
+			results := []cli.OpResultRow{}
 			for _, idName := range ids {
 				id := ctx.PickResourceID(idName)
 				req.DBId = sdk.String(id)
@@ -34,11 +36,13 @@ func newStop(ctx *cli.Context) *cobra.Command {
 				}
 				text := fmt.Sprintf("%s[%s] is stopping", productName, id)
 				if async {
-					fmt.Fprintln(ctx.Out(), text)
-					continue
+					fmt.Fprintln(w, text)
+				} else {
+					ctx.PollerTo(w, describeByID(ctx)).Spoll(id, text, []string{stateShutoff, stateFail})
 				}
-				ctx.Poller(describeByID(ctx)).Spoll(id, text, []string{stateShutoff, stateFail})
+				results = append(results, cli.OpResultRow{ResourceID: id, Action: "stop", Status: "Stopping"})
 			}
+			ctx.EmitResult(results...)
 		},
 	}
 

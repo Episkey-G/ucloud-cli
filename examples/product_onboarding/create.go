@@ -18,9 +18,9 @@ var versionValues = []string{"mysql-5.7", "mysql-8.0"}
 // newCreate implements `example create`.
 //
 // Platform APIs exercised: cli.NewServiceClient, ctx.BindCommonParams,
-// ctx.Poller(...).Spoll (the wait path), ctx.Out, ctx.HandleError,
-// command.SetFlagValues, MarkFlagRequired with "Required." descriptions, the
-// --async pattern.
+// ctx.PollerTo(...).Spoll (the wait path), ctx.ProgressWriter, ctx.EmitResult,
+// ctx.HandleError, command.SetFlagValues, MarkFlagRequired with "Required."
+// descriptions, the --async pattern.
 func newCreate(ctx *cli.Context) *cobra.Command {
 	client := cli.NewServiceClient(ctx, udb.NewClient)
 	req := client.NewCreateUDBInstanceRequest()
@@ -32,19 +32,27 @@ func newCreate(ctx *cli.Context) *cobra.Command {
 		Short: "Create an example instance",
 		Long:  "Create an example instance and, unless --async is set, wait for it to become Running.",
 		Run: func(c *cobra.Command, args []string) {
+			// Human narration goes to the progress writer: stdout in table
+			// mode, stderr in machine (json/yaml) modes so stdout stays
+			// machine-parseable.
+			w := ctx.ProgressWriter()
 			resp, err := client.CreateUDBInstance(req)
 			if err != nil {
 				ctx.HandleError(err)
 				return
 			}
-			if async {
-				// --async: return immediately without polling.
-				fmt.Fprintf(ctx.Out(), "%s[%s] is creating\n", productName, resp.DBId)
-				return
-			}
-			// Synchronous: poll until the instance reaches a terminal state.
 			text := fmt.Sprintf("%s[%s] is creating", productName, resp.DBId)
-			ctx.Poller(describeByID(ctx)).Spoll(resp.DBId, text, []string{stateRunning, stateFail})
+			if async {
+				// --async: narrate and return without polling.
+				fmt.Fprintln(w, text)
+			} else {
+				// Synchronous: poll until the instance reaches a terminal state.
+				ctx.PollerTo(w, describeByID(ctx)).Spoll(resp.DBId, text, []string{stateRunning, stateFail})
+			}
+			// Machine (json/yaml) modes: emit the structured result row on
+			// stdout. In table mode EmitResult is a no-op — the narration
+			// above is the result.
+			ctx.EmitResult(cli.OpResultRow{ResourceID: resp.DBId, Action: "create", Status: "Creating"})
 		},
 	}
 

@@ -16,7 +16,8 @@ import (
 //
 // Platform APIs exercised: cli.NewServiceClient, ctx.BindCommonParams,
 // ctx.Confirm (the destructive-op guard), the --yes/-y pattern,
-// ctx.PickResourceID, ctx.Out, ctx.HandleError, command.SetCompletion.
+// ctx.PickResourceID, ctx.ProgressWriter, ctx.EmitResult, ctx.HandleError,
+// command.SetCompletion.
 func newDelete(ctx *cli.Context) *cobra.Command {
 	client := cli.NewServiceClient(ctx, udb.NewClient)
 	req := client.NewDeleteUDBInstanceRequest()
@@ -33,6 +34,8 @@ func newDelete(ctx *cli.Context) *cobra.Command {
 			if !ctx.Confirm(yes, "Are you sure you want to delete the instance(s)?") {
 				return
 			}
+			w := ctx.ProgressWriter()
+			results := []cli.OpResultRow{}
 			for _, idName := range ids {
 				id := ctx.PickResourceID(idName)
 				req.DBId = sdk.String(id)
@@ -40,8 +43,10 @@ func newDelete(ctx *cli.Context) *cobra.Command {
 					ctx.HandleError(err)
 					continue
 				}
-				fmt.Fprintf(ctx.Out(), "%s[%s] deleted\n", productName, id)
+				fmt.Fprintf(w, "%s[%s] deleted\n", productName, id)
+				results = append(results, cli.OpResultRow{ResourceID: id, Action: "delete", Status: "Deleted"})
 			}
+			ctx.EmitResult(results...)
 		},
 	}
 

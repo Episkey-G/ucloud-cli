@@ -25,6 +25,8 @@ func newRestart(ctx *cli.Context) *cobra.Command {
 		Short: "Restart example instances",
 		Long:  "Restart one or more example instances.",
 		Run: func(c *cobra.Command, args []string) {
+			w := ctx.ProgressWriter()
+			results := []cli.OpResultRow{}
 			for _, idName := range ids {
 				id := ctx.PickResourceID(idName)
 				req.DBId = sdk.String(id)
@@ -34,11 +36,13 @@ func newRestart(ctx *cli.Context) *cobra.Command {
 				}
 				text := fmt.Sprintf("%s[%s] is restarting", productName, id)
 				if async {
-					fmt.Fprintln(ctx.Out(), text)
-					continue
+					fmt.Fprintln(w, text)
+				} else {
+					ctx.PollerTo(w, describeByID(ctx)).Spoll(id, text, []string{stateRunning, stateFail})
 				}
-				ctx.Poller(describeByID(ctx)).Spoll(id, text, []string{stateRunning, stateFail})
+				results = append(results, cli.OpResultRow{ResourceID: id, Action: "restart", Status: "Restarting"})
 			}
+			ctx.EmitResult(results...)
 		},
 	}
 

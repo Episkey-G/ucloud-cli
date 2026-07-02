@@ -15,7 +15,7 @@ import (
 // describeByID returns the Poller describe func: given a resource id it fetches
 // the current resource so the Poller can read its state field. The signature
 // (func(string, *request.CommonBase) (interface{}, error)) is exactly what
-// ctx.Poller expects.
+// ctx.PollerTo expects.
 func describeByID(ctx *cli.Context) func(string, *request.CommonBase) (interface{}, error) {
 	return func(id string, common *request.CommonBase) (interface{}, error) {
 		client := cli.NewServiceClient(ctx, udb.NewClient)
