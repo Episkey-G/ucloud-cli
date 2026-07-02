@@ -66,25 +66,10 @@ func (p *Product) Metadata() cli.Metadata {
 // NewCommand builds the product's cobra subtree. This is the only wiring a
 // product owns: construct the root command and AddCommand one cobra.Command per
 // verb. Each verb constructor receives ctx so it can build authed SDK clients
-// (via cli.NewServiceClient) and bind common flags.
+// (via cli.NewServiceClient) and bind common flags. NewCommand hands the tree
+// assembly to newCommand (cmd.go).
 func (p *Product) NewCommand(ctx *cli.Context) *cobra.Command {
-	cmd := &cobra.Command{
-		Use:   productName,
-		Short: "Greenfield example product (onboarding worked example)",
-		Long: "Greenfield example product demonstrating the ucloud-cli platform " +
-			"onboarding contract. Not a real product; exists as the onboarding " +
-			"worked example and the platform-API compile gate.",
-	}
-
-	cmd.AddCommand(newList(ctx))
-	cmd.AddCommand(newDescribe(ctx))
-	cmd.AddCommand(newCreate(ctx))
-	cmd.AddCommand(newDelete(ctx))
-	cmd.AddCommand(newStart(ctx))
-	cmd.AddCommand(newStop(ctx))
-	cmd.AddCommand(newRestart(ctx))
-
-	return cmd
+	return newCommand(ctx)
 }
 
 // Compile-time assurance that Product satisfies the platform interface. If
