@@ -27,17 +27,17 @@
 //  4. No raw completion API calls: flag selector calls whose method name is
 //     SetFlagValuesFunc, GetFlagValuesFunc, GetFlagValues, or SetFlagValues
 //     (when the receiver is not "command").
-//  5. products.yaml consistency: every enabled product whose dir is absent on
+//  5. product.yaml consistency: every enabled product whose dir is absent on
 //     disk emits a WARNING (not a failure). Every directory under products/
-//     that has no entry in products.yaml is a VIOLATION.
-//  6. Reserved command names: no products.yaml entry may declare a top-level
+//     that has no product.yaml is a VIOLATION.
+//  6. Reserved command names: no product.yaml may declare a top-level
 //     command name that the platform itself registers (see reservedCommands).
 //     A product declaring e.g. "config" would silently shadow the platform
 //     command, so it is a VIOLATION.
 //  7. Cross-product command uniqueness: no two enabled products may declare the
 //     same top-level command name (cobra AddCommand silently shadows duplicates).
 //  8. Commands consistency: each enabled product's product.go Metadata().Commands
-//     must match its products.yaml `commands` (order-independent).
+//     must match its product.yaml `commands` (order-independent).
 //  9. §6.1 import whitelist: product files may import only stdlib,
 //     ucloud-sdk-go, spf13/cobra|pflag, pkg/cli|command|ui, internal/common,
 //     and their own product subtree. Anything else (model/*, ux/, new
